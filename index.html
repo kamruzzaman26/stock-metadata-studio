@@ -566,44 +566,36 @@ async function getSearchFile(item){
 
 async function reverseSearch(id,site){
   var item=getItem(id);if(!item) return;
-  if(site==="tineye"){
-    var isVec=(item.type!=="jpg"&&item.type!=="png");
-    if(isVec){
-      var pf=await getSearchFile(item);
-      if(pf){
-        var a=document.createElement("a");
-        a.href=URL.createObjectURL(pf);
-        a.download=item.name.replace(/\.[^.]+$/,"")+"-preview.png";
-        document.body.appendChild(a);a.click();a.remove();
-      }
+
+  /* Google Lens, direct upload (worked before; Google may answer 403 on some pages) */
+  if(site==="google"){
+    var f=await getSearchFile(item);
+    if(!f){banner("No preview image for this file, so it cannot be sent. Export a PNG or JPG and try again.","");return;}
+    try{
+      var form=document.createElement("form");
+      form.method="POST";form.action="https://www.google.com/searchbyimage/upload";
+      form.enctype="multipart/form-data";form.target="_blank";form.style.display="none";
+      var inp=document.createElement("input");
+      inp.type="file";inp.name="encoded_image";
+      var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;
+      form.appendChild(inp);
+      var h=document.createElement("input");h.type="hidden";h.name="image_content";h.value="";form.appendChild(h);
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function(){form.remove();},3000);
+      banner("🔎 Image sent to Google Lens. If the new tab shows a 403 error, Google has blocked the direct upload.","run");
+    }catch(e){
+      banner("Direct upload is not supported in this browser.","");
     }
-    window.open("https://tineye.com/","_blank");
-    banner("🌐 TinEye opened in a new tab. Tap its upload button and choose "+(isVec?"the PNG preview just saved in your Downloads.":"this file."),"run");
     return;
   }
-  var f=await getSearchFile(item);
-  if(!f){alert("No preview image for this file, so it cannot be sent. Export a PNG or JPG and try again.");return;}
-  var cfg=site==="tineye"
-    ?{action:"https://tineye.com/search",field:"image",extra:{}}
-    :{action:"https://www.google.com/searchbyimage/upload",field:"encoded_image",extra:{image_content:"",sbisrc:"StockMetadataStudio"}};
-  try{
-    var form=document.createElement("form");
-    form.method="POST";form.action=cfg.action;form.enctype="multipart/form-data";form.target="_blank";
-    form.style.display="none";
-    var inp=document.createElement("input");
-    inp.type="file";inp.name=cfg.field;
-    var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;
-    form.appendChild(inp);
-    Object.keys(cfg.extra).forEach(function(k){
-      var h=document.createElement("input");h.type="hidden";h.name=k;h.value=cfg.extra[k];form.appendChild(h);
-    });
-    document.body.appendChild(form);
-    form.submit();
-    setTimeout(function(){form.remove();},3000);
-  }catch(e){
-    alert("Automatic upload is not supported in this browser. The site will open and you can upload the file yourself.");
-    window.open(site==="tineye"?"https://tineye.com/":"https://lens.google.com/","_blank");
-  }
+
+  /* TinEye and Lens (Manual): save the image, open the site, upload by hand */
+  var url=site==="tineye"?"https://tineye.com/":"https://lens.google.com/";
+  var label=site==="tineye"?"TinEye":"Google Lens";
+  window.open(url,"_blank");
+  await downloadImage(id);
+  banner("⬇️ Image saved to Downloads and "+label+" opened in a new tab. Tap the upload (or camera) button there and choose the saved image.","ok");
 }
 
 function checkOne(id){
@@ -670,7 +662,7 @@ function cardHTML(item){
   '<button class="dlBtn" onclick="downloadImage('+item.id+')">⬇ Download Image</button>'+
   '<button class="simBtn" onclick="checkOne('+item.id+')">🔍 Similarity Check</button>'+
   '<div class="risk ok" id="risk'+item.id+'"><b>Similarity Risk:</b> tap the button above to check</div>'+
-  '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div><div class="counter">Google Lens: file is sent automatically. TinEye blocks automatic upload, so it opens tineye.com and you pick the file (SVG, EPS and AI: a PNG preview is saved to Downloads first).</div>'+
+  '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div><div class="counter">Google Lens sends the image directly. TinEye saves the image to Downloads and opens the site, then you upload it there (SVG, EPS and AI: a PNG preview is saved).</div>'+
   '<div class="status '+statusCls+'" id="st'+item.id+'">'+statusTxt+'</div>'+
   '<div class="field"><label>Filename</label><input type="text" value="'+escapeHTML(item.name)+'" oninput="setField('+item.id+',\'name\',this.value)"></div>'+
   '<div class="field"><label>Title</label><input type="text" id="ti'+item.id+'" value="'+escapeHTML(item.title)+'" oninput="setField('+item.id+',\'title\',this.value)"><div class="counter" id="tc'+item.id+'">'+item.title.length+' / '+RULES.titleMaxLength+'</div></div>'+
