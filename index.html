@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Metadata Studio - Full</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-gradient(180deg,#eef2ff 0,#f6f8fb 260px);color:#172033}
+.container{max-width:900px;margin:auto;padding:0 14px 40px}
+.header{margin:0 -14px 16px;padding:26px 20px 28px;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);color:#fff;display:flex;gap:14px;align-items:center;border-radius:0 0 26px 26px;box-shadow:0 10px 30px rgba(30,58,138,.25)}
+.logo{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;font-size:28px;flex:none}
+.header h1{margin:0 0 4px;font-size:25px;letter-spacing:-.3px}
+.header p{margin:0;opacity:.8;font-size:14px}
+.panel{background:#fff;border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 8px 28px rgba(15,23,42,.08);border:1px solid #e8edf5}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px}
+button,.uploadBtn{border:0;border-radius:14px;padding:13px 18px;font-weight:700;cursor:pointer;font-size:15px;color:#fff;font-family:inherit;transition:transform .12s,box-shadow .12s}
+button:active,.uploadBtn:active{transform:scale(.97)}
+.uploadBtn{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 6px 16px rgba(37,99,235,.35);font-size:17px;padding:16px}
+.btn-analyze{background:linear-gradient(135deg,#1d4ed8,#4f46e5);box-shadow:0 6px 16px rgba(79,70,229,.3)}
+.btn-green{background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 6px 16px rgba(16,185,129,.3)}
+.btn-slate{background:#475569}
+.btn-light{background:#eef2f7;color:#172033}
+button.danger{background:linear-gradient(135deg,#dc2626,#ef4444)}
+input[type=file]{display:none}
+.ai{margin-top:14px;font-size:12px;color:#64748b}
+.bar{height:6px;background:#e2e8f0;border-radius:6px;overflow:hidden;margin-top:8px}
+.bar div{height:100%;width:0;background:linear-gradient(90deg,#3b82f6,#10b981);transition:width .3s}
+.banner{background:#fff;border:1px solid #e8edf5;border-radius:16px;padding:14px 16px;margin-bottom:14px;font-size:15px;font-weight:600;color:#475569;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.banner.ok{background:#ecfdf5;border-color:#a7f3d0;color:#047857}
+.banner.run{background:#eff6ff;border-color:#bfdbfe;color:#1d4ed8}
+.workflow{background:#fff;border-radius:18px;padding:16px;margin-bottom:14px;font-size:13px;line-height:1.8;border:1px solid #e8edf5;color:#475569}
+.workflow b{color:#172033}
+.card{background:#fff;border-radius:22px;padding:16px;margin-bottom:16px;box-shadow:0 8px 28px rgba(15,23,42,.08);border:1px solid #e8edf5}
+.cardTop{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.linkRow{display:flex;gap:8px;margin-top:12px;align-items:stretch}
+.linkRow input[type=text]{flex:1;min-width:0;padding:10px 12px;font-size:13px;border-radius:12px}
+.smallBtn{flex:none;padding:10px 14px;font-size:13px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#14b8a6);box-shadow:0 4px 12px rgba(20,184,166,.3)}
+.simBtn{display:block;width:100%;margin-top:14px;padding:17px;font-size:17px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 8px 20px rgba(124,58,237,.35)}
+.serial{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:13px;font-weight:800;min-width:38px;text-align:center;padding:5px 10px;border-radius:999px;flex:none}
+.badge{background:#172033;color:#fff;font-size:11px;font-weight:800;letter-spacing:.8px;padding:5px 10px;border-radius:999px;flex:none}
+.fname{font-size:13px;color:#64748b;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.preview{min-height:190px;border-radius:16px;background-color:#f8fafc;background-image:linear-gradient(45deg,#eef2f7 25%,transparent 25%),linear-gradient(-45deg,#eef2f7 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#eef2f7 75%),linear-gradient(-45deg,transparent 75%,#eef2f7 75%);background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.preview img,.preview canvas{max-width:100%;max-height:360px;display:block}
+.fileBox{text-align:center;padding:30px;background:rgba(255,255,255,.9);border-radius:14px;margin:10px}
+.fileIcon{font-size:50px;margin-bottom:8px}
+.status{font-size:13px;margin:12px 0 4px;color:#64748b;font-weight:600}
+.success{color:#059669}.warning{color:#b45309}.danger-t{color:#b42318}
+.field{margin-top:14px}
+.field label{display:block;font-size:11px;font-weight:800;margin-bottom:6px;color:#64748b;text-transform:uppercase;letter-spacing:.6px}
+input[type=text],textarea,select{width:100%;border:1.5px solid #dbe3ee;border-radius:14px;padding:12px 14px;font-size:15px;font-family:inherit;background:#fbfcfe;color:#172033}
+input[type=text]:focus,textarea:focus,select:focus{outline:0;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+textarea{min-height:110px;resize:vertical}
+.keywords{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.keyword{background:#eef2f7;padding:7px 12px;border-radius:999px;font-size:12px;color:#334155}
+.keyword.top{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;font-weight:600}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.counter{font-size:12px;color:#94a3b8;margin-top:6px}
+.risk{margin-top:14px;padding:12px 14px;border-radius:14px;font-size:13px;line-height:1.55}
+.risk.ok{background:#ecfdf5;color:#047857}
+.risk.mid{background:#fffbeb;color:#b45309}
+.risk.high{background:#fef2f2;color:#b91c1c}
+.note{font-size:12px;line-height:1.7;color:#94a3b8;padding:0 6px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<div class="header">
+<div class="logo">🗂️</div>
+<div>
+<h1>Stock Metadata Studio</h1>
+<p>Fast metadata workspace for stock contributors</p>
+</div>
+</div>
+
+<div class="panel">
+<div class="toolbar">
+<label class="uploadBtn">📁 Upload JPG / PNG / SVG / EPS / AI
+<input id="fileInput" type="file" multiple accept=".jpg,.jpeg,.png,.svg,.eps,.ai,image/jpeg,image/png,image/svg+xml">
+</label>
+<button class="btn-analyze" onclick="analyzeAll()">🤖 Analyze</button>
+<button class="btn-slate" onclick="runRisk(true)">🔍 Similarity</button>
+<button class="btn-green" onclick="downloadCSV()">💾 Adobe CSV</button>
+<button class="btn-slate" onclick="copyAll()">📋 Copy</button>
+<button class="btn-light" onclick="clearHistory()">🧹 Clear History</button>
+<button class="danger" onclick="clearAll()">🗑️ Clear</button>
+</div>
+<div class="ai" id="aiStatus">AI model: not loaded yet (loads once on first upload, then cached by browser)</div>
+<div class="bar"><div id="aiBar"></div></div>
+</div>
+
+<div class="banner" id="banner">Upload files to begin. Analysis starts automatically.</div>
+
+<div class="workflow">
+<b>Adobe Stock Workflow</b><br>
+1. Upload files (batch OK) → 2. Wait for the green "Metadata ready" status → 3. Review Title and the first 10 keywords (dark chips = highest priority) → 4. Fix anything wrong by hand → 5. Check the Similarity Risk box → 6. Choose Category per file → 7. Copy Metadata or download Adobe CSV → 8. Upload files in Adobe Stock Contributor portal, then import the CSV.
+</div>
+
+<div id="results"></div>
+
+<p class="note">
+Files are processed one at a time so mobile Chrome does not freeze. AI files are rendered only if they are PDF-compatible. EPS files are drawn from embedded PDF or JPEG data, or with the Ghostscript renderer (about 16 MB download the first time, and the page may pause briefly while it draws). The AI model gives general object labels, so always review the Title and keywords before submitting to Adobe Stock.
+</p>
+</div>
+
+<script>
+/* =========================
+   RULES (edit here)
+========================= */
+var RULES = {
+  keywordCount: 30,
+  priorityCount: 10,
+  titleMaxLength: 200,
+  similarityWarn: 0.6,
+  similarityHigh: 0.8
+};
+
+var stopWords = new Set(["the","and","with","from","this","that","for","into","collection","set","image","file","stock","img","dsc","copy","final","new","jpg","jpeg","png","svg","eps","ai","photo","picture","pic","design","vector"]);
+var bannedKeywords = new Set(["image","file","stock","jpg","png","svg","eps","ai","untitled","copy","final","good","best","nice","beautiful","amazing","cool","wow"]);
+
+var subjectMap = {
+cloud:["weather","sky","rain","storm","atmosphere","cloudy","forecast","climate"],
+rain:["weather","raindrop","water","storm","wet","cloud"],
+palm:["tree","tropical","leaf","island","beach","summer","vacation","exotic"],
+tree:["forest","nature","plant","woodland","foliage","botanical","green"],
+flower:["floral","botanical","blossom","garden","plant","petal","bloom"],
+icon:["symbol","sign","pictogram","silhouette","outline","button","ui"],
+pattern:["seamless","ornamental","decorative","textile","wallpaper","repeat","texture"],
+business:["finance","office","marketing","corporate","commerce","management","strategy"],
+mosque:["islam","islamic","muslim","architecture","religion","prayer","dome","minaret"],
+islamic:["muslim","islam","religion","culture","arabic","ornament","tradition"],
+ramadan:["islamic","muslim","crescent","lantern","fasting","holy","celebration"],
+eid:["islamic","muslim","celebration","festival","greeting","holiday","crescent"],
+moon:["night","crescent","sky","lunar","astronomy","space"],
+star:["night","sky","shine","space","symbol","sparkle"],
+food:["meal","menu","restaurant","cuisine","dish","delicious","cooking"],
+logo:["brand","branding","identity","emblem","mark","company","corporate"],
+book:["education","reading","library","study","knowledge","literature","learning"],
+heart:["love","romance","valentine","symbol","emotion","care","health"],
+leaf:["plant","nature","green","botanical","foliage","organic","eco"],
+sun:["sunshine","summer","weather","sky","light","bright","day"],
+water:["liquid","drop","blue","aqua","wave","fresh","clean"],
+mountain:["landscape","nature","peak","hiking","outdoor","scenery","travel"],
+car:["vehicle","transport","automobile","drive","road","traffic","transportation"],
+house:["home","building","architecture","property","real","estate","residential"]
+};
+
+var vectorPool = ["illustration","graphic","isolated","minimal","clean","modern","artwork","creative","decorative","element","shape","simple","scalable","editable","flat","template","symbol","concept","print","branding","web","poster","background","visual","commercial","abstract","outline","silhouette","line","digital"];
+var photoPool = ["photography","high","quality","closeup","detail","composition","natural","background","texture","color","bright","outdoor","indoor","creative","concept","design","modern","clean","simple","isolated","professional","commercial","editorial","fresh","still","scene","style","art","visual","backdrop"];
+
+var categories = [[1,"Animals"],[2,"Buildings and Architecture"],[3,"Business"],[4,"Drinks"],[5,"The Environment"],[6,"States of Mind"],[7,"Food"],[8,"Graphic Resources"],[9,"Hobbies and Leisure"],[10,"Industry"],[11,"Landscapes"],[12,"Lifestyle"],[13,"People"],[14,"Plants and Flowers"],[15,"Culture and Religion"],[16,"Science"],[17,"Social Issues"],[18,"Sports"],[19,"Technology"],[20,"Transport"],[21,"Travel"]];
+
+var filesData = [];
+var queue = [];
+var processing = false;
+var model = null;
+var modelPromise = null;
+var pdfReady = null;
+
+/* =========================
+   UTILITIES
+========================= */
+function escapeHTML(t){
+  return String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+function tokenize(name){
+  return (name.toLowerCase().replace(/\.[^.]+$/,"").match(/[a-z]{3,}/g) || []);
+}
+function loadScript(src){
+  return new Promise(function(res,rej){
+    var s=document.createElement("script");
+    s.src=src;s.onload=res;s.onerror=function(){rej(new Error("load failed "+src));};
+    document.head.appendChild(s);
+  });
+}
+function setAI(text,pct){
+  document.getElementById("aiStatus").textContent=text;
+  if(pct!==undefined) document.getElementById("aiBar").style.width=pct+"%";
+}
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms);});}
+
+/* =========================
+   AI MODEL (loads once)
+========================= */
+function loadModel(){
+  if(model) return Promise.resolve(model);
+  if(modelPromise) return modelPromise;
+  modelPromise=(async function(){
+    try{
+      setAI("AI model: loading engine...",10);
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.17.0/dist/tf.min.js");
+      setAI("AI model: loading classifier...",40);
+      await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js");
+      setAI("AI model: downloading weights (first time only)...",60);
+      model=await mobilenet.load({version:2,alpha:1.0});
+      setAI("AI model: ready (cached by browser)",100);
+      return model;
+    }catch(e){
+      setAI("AI model unavailable. Filename-based metadata will be used. ("+e.message+")",0);
+      modelPromise=null;
+      return null;
+    }
+  })();
+  return modelPromise;
+}
+
+async function classify(canvas){
+  var m=await loadModel();
+  if(!m||!canvas) return [];
+  try{
+    var r=await m.classify(canvas,5);
+    return r.filter(function(x){return x.probability>0.04;});
+  }catch(e){return [];}
+}
+
+/* =========================
+   PREVIEW RENDERERS
+========================= */
+async function svgToUrl(file){
+  try{
+    var text=await file.text();
+    var doc=new DOMParser().parseFromString(text,"image/svg+xml");
+    var root=doc.documentElement;
+    if(root&&root.nodeName.toLowerCase()==="svg"&&!doc.querySelector("parsererror")){
+      if(!root.getAttribute("xmlns")) root.setAttribute("xmlns","http://www.w3.org/2000/svg");
+      var w=root.getAttribute("width"),h=root.getAttribute("height");
+      var vb=(root.getAttribute("viewBox")||"").trim().split(/[\s,]+/).map(Number);
+      var bad=function(v){return !v||/%/.test(v)||!parseFloat(v);};
+      if(bad(w)||bad(h)){
+        var vw=vb.length===4&&vb[2]>0?vb[2]:512,vh=vb.length===4&&vb[3]>0?vb[3]:512;
+        root.setAttribute("width",vw);root.setAttribute("height",vh);
+        if(vb.length!==4) root.setAttribute("viewBox","0 0 "+vw+" "+vh);
+      }
+      return URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(root)],{type:"image/svg+xml"}));
+    }
+  }catch(e){}
+  return URL.createObjectURL(new Blob([file],{type:"image/svg+xml"}));
+}
+
+
+function imgToCanvas(url,maxSize){
+  return new Promise(function(res){
+    var img=new Image();
+    img.onload=function(){
+      var max=maxSize||320,w=img.naturalWidth||max,h=img.naturalHeight||max;
+      var s=Math.min(1,max/Math.max(w,h));
+      if(!isFinite(s)||s<=0) s=1;
+      var c=document.createElement("canvas");
+      c.width=Math.max(1,Math.round(w*s));c.height=Math.max(1,Math.round(h*s));
+      var x=c.getContext("2d");
+      x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+      try{x.drawImage(img,0,0,c.width,c.height);}catch(e){}
+      res(c);
+    };
+    img.onerror=function(){res(null);};
+    img.src=url;
+  });
+}
+
+async function ensurePdfJs(){
+  if(pdfReady) return pdfReady;
+  pdfReady=(async function(){
+    await loadScript("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js");
+    var r=await fetch("https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js");
+    var t=await r.text();
+    pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([t],{type:"text/javascript"}));
+  })();
+  return pdfReady;
+}
+
+async function renderAI(file){
+  if(file.size>60*1024*1024) throw new Error("AI file too large for safe preview");
+  await ensurePdfJs();
+  var buf=await file.arrayBuffer();
+  var pdf=await pdfjsLib.getDocument({data:buf}).promise;
+  var page=await pdf.getPage(1);
+  var vp=page.getViewport({scale:1});
+  var s=Math.min(2,900/Math.max(vp.width,vp.height));
+  var v=page.getViewport({scale:s});
+  var c=document.createElement("canvas");
+  c.width=Math.round(v.width);c.height=Math.round(v.height);
+  var x=c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+  await page.render({canvasContext:x,viewport:v}).promise;
+  try{pdf.destroy();}catch(e){}
+  return c;
+}
+
+function findSeq(bytes,seq,from){
+  var n=bytes.length-seq.length;
+  for(var i=from||0;i<=n;i++){
+    var ok=true;
+    for(var k=0;k<seq.length;k++){if(bytes[i+k]!==seq[k]){ok=false;break;}}
+    if(ok) return i;
+  }
+  return -1;
+}
+
+async function renderPdfBytes(bytes){
+  await ensurePdfJs();
+  var pdf=await pdfjsLib.getDocument({data:bytes}).promise;
+  var page=await pdf.getPage(1);
+  var vp=page.getViewport({scale:1});
+  var s=Math.min(2,900/Math.max(vp.width,vp.height));
+  var v=page.getViewport({scale:s});
+  var c=document.createElement("canvas");
+  c.width=Math.round(v.width);c.height=Math.round(v.height);
+  var x=c.getContext("2d");
+  x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);
+  await page.render({canvasContext:x,viewport:v}).promise;
+  try{pdf.destroy();}catch(e){}
+  return c;
+}
+
+function embeddedJpegCanvas(bytes){
+  var best=null,i=0;
+  while(i<bytes.length-3){
+    if(bytes[i]===0xFF&&bytes[i+1]===0xD8&&bytes[i+2]===0xFF){
+      var j=i+3;
+      while(j<bytes.length-1&&!(bytes[j]===0xFF&&bytes[j+1]===0xD9)) j++;
+      if(j<bytes.length-1){
+        var len=j+2-i;
+        if(!best||len>best.len) best={start:i,len:len};
+        i=j+2;continue;
+      }
+    }
+    i++;
+  }
+  if(!best||best.len<2000) return Promise.resolve(null);
+  var url=URL.createObjectURL(new Blob([bytes.slice(best.start,best.start+best.len)],{type:"image/jpeg"}));
+  return imgToCanvas(url);
+}
+
+var gsLoaded=false;
+async function renderWithGhostscript(bytes,item){
+  var base="https://cdn.jsdelivr.net/npm/@jspawn/ghostscript-wasm@0.0.2/";
+  if(!gsLoaded){
+    stage(item,"Downloading Ghostscript renderer (about 16 MB, first time only)...");
+    await loadScript(base+"gs.js");
+    gsLoaded=true;
+  }
+  stage(item,"Rendering EPS with Ghostscript. The page may pause for a few seconds...");
+  await sleep(150);
+  var gs=await Module({
+    locateFile:function(f){return base+f;},
+    noInitialRun:true,
+    print:function(){},
+    printErr:function(){}
+  });
+  gs.FS.writeFile("in.eps",bytes);
+  try{
+    gs.callMain(["-dNOPAUSE","-dBATCH","-dSAFER","-dEPSCrop","-sDEVICE=png16m","-r72","-dTextAlphaBits=4","-dGraphicsAlphaBits=4","-sOutputFile=out.png","in.eps"]);
+  }catch(e){}
+  var out=gs.FS.readFile("out.png");
+  var url=URL.createObjectURL(new Blob([out],{type:"image/png"}));
+  var c=await imgToCanvas(url);
+  if(!c) throw new Error("Ghostscript produced no image");
+  return c;
+}
+
+async function renderEPS(file,item){
+  if(file.size>60*1024*1024) throw new Error("EPS too large for safe preview");
+  var bytes=new Uint8Array(await file.arrayBuffer());
+
+  /* 1. PDF data embedded inside the EPS */
+  var p=findSeq(bytes,[0x25,0x50,0x44,0x46,0x2D]);
+  if(p>=0){
+    try{
+      stage(item,"Reading embedded PDF artwork...");
+      return await renderPdfBytes(bytes.slice(p));
+    }catch(e){}
+  }
+  /* 2. Embedded JPEG preview */
+  try{
+    var j=await embeddedJpegCanvas(bytes);
+    if(j) return j;
+  }catch(e){}
+  /* 3. Ghostscript (real PostScript renderer) */
+  if(file.size<=25*1024*1024){
+    return await renderWithGhostscript(bytes,item);
+  }
+  throw new Error("file too large for Ghostscript on a phone");
+}
+
+/* =========================
+   METADATA ENGINE
+========================= */
+function addUnique(list,word){
+  if(!word) return;
+  word=word.toLowerCase().trim();
+  if(!/^[a-z][a-z ]*$/.test(word)||word.length<3) return;
+  if(bannedKeywords.has(word)||stopWords.has(word)) return;
+  if(list.indexOf(word)!==-1) return;
+  if(list.indexOf(word+"s")!==-1||list.indexOf(word.replace(/s$/,""))!==-1) return;
+  list.push(word);
+}
+
+function labelWords(labels){
+  var out=[];
+  labels.forEach(function(l){
+    l.className.split(",").forEach(function(part){
+      part=part.trim().toLowerCase();
+      if(part) out.push(part);
+    });
+  });
+  return out;
+}
+
+function buildMetadata(name,type,labels){
+  var isVector=(type==="svg"||type==="eps"||type==="ai");
+  var fileWords=tokenize(name).filter(function(w){return !stopWords.has(w);});
+  var labs=labelWords(labels);
+  var labSingle=[];
+  labs.forEach(function(p){p.split(/\s+/).forEach(function(w){labSingle.push(w);});});
+
+  var keywords=[];
+
+  /* 1. highest priority: filename subject, then AI top label */
+  fileWords.slice(0,4).forEach(function(w){addUnique(keywords,w);});
+  if(labs[0]) addUnique(keywords,labs[0]);
+  labs.slice(1,4).forEach(function(w){addUnique(keywords,w);});
+
+  /* 2. subject research from known subjects */
+  var all=fileWords.concat(labSingle);
+  var related=[];
+  all.forEach(function(w){
+    for(var k in subjectMap){
+      if(w===k||w===k+"s"){subjectMap[k].forEach(function(r){related.push(r);});}
+    }
+  });
+  related.forEach(function(w){addUnique(keywords,w);});
+
+  /* 3. remaining filename and label words */
+  fileWords.forEach(function(w){addUnique(keywords,w);});
+  labSingle.forEach(function(w){addUnique(keywords,w);});
+
+  /* 4. type-relevant secondary terms */
+  var pool=isVector?vectorPool:photoPool;
+  if(isVector){addUnique(keywords,"vector");}
+  var i=0;
+  while(keywords.length<RULES.keywordCount&&i<pool.length){addUnique(keywords,pool[i]);i++;}
+
+  keywords=keywords.slice(0,RULES.keywordCount);
+
+  /* title */
+  var subj=(labs[0]||fileWords.slice(0,3).join(" ")||"abstract").replace(/\b[a-z]/g,function(c){return c.toUpperCase();});
+  var fileTitle=fileWords.slice(0,4).join(" ").replace(/\b[a-z]/g,function(c){return c.toUpperCase();});
+  var main=fileTitle||subj;
+  if(fileTitle&&labs[0]&&fileWords.indexOf(labs[0].split(" ")[0])===-1&&!isVector){main=fileTitle+" "+subj;}
+  var title;
+  if(isVector){
+    var extra=keywords.filter(function(k){return k!=="vector"&&k!=="illustration"&&main.toLowerCase().indexOf(k)===-1;}).slice(0,3);
+    title=main+" Vector Illustration, "+extra.join(", ")+" Design";
+  }else{
+    var ex=keywords.filter(function(k){return main.toLowerCase().indexOf(k)===-1;}).slice(0,3);
+    title=main+", "+ex.join(", ");
+  }
+  title=title.replace(/\s+/g," ").replace(/,\s*,/g,",").replace(/,\s*Design$/," Design").slice(0,RULES.titleMaxLength).trim();
+  return {title:title,keywords:keywords,isVector:isVector};
+}
+
+/* =========================
+   SIMILARITY RISK
+========================= */
+function jaccard(a,b){
+  var sa=new Set(a),sb=new Set(b),inter=0;
+  sa.forEach(function(x){if(sb.has(x)) inter++;});
+  var uni=sa.size+sb.size-inter;
+  return uni?inter/uni:0;
+}
+function titleSim(a,b){
+  return jaccard(a.toLowerCase().match(/[a-z]+/g)||[],b.toLowerCase().match(/[a-z]+/g)||[]);
+}
+function dHash(canvas,flip){
+  var mid=document.createElement("canvas");mid.width=36;mid.height=32;
+  var mx=mid.getContext("2d");mx.fillStyle="#fff";mx.fillRect(0,0,36,32);
+  mx.imageSmoothingQuality="high";mx.drawImage(canvas,0,0,36,32);
+  var c=document.createElement("canvas");c.width=9;c.height=8;
+  var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,9,8);
+  x.imageSmoothingQuality="high";
+  if(flip){x.translate(9,0);x.scale(-1,1);}
+  x.drawImage(mid,0,0,9,8);
+  var d=x.getImageData(0,0,9,8).data,g=[],i,bits="";
+  for(i=0;i<72;i++) g.push(0.299*d[i*4]+0.587*d[i*4+1]+0.114*d[i*4+2]);
+  for(var y=0;y<8;y++)for(var xx=0;xx<8;xx++) bits+=(g[y*9+xx]>g[y*9+xx+1])?"1":"0";
+  return bits;
+}
+function ham(a,b){var n=0;for(var i=0;i<a.length;i++) if(a[i]!==b[i]) n++;return n;}
+function visualSim(a,b){
+  if(!a.hash||!b.hash) return 0;
+  var d=ham(a.hash,b.hash);
+  if(b.hashFlip) d=Math.min(d,ham(a.hash,b.hashFlip));
+  return 1-d/64;
+}
+function loadHistory(){try{return JSON.parse(localStorage.getItem("sms_hist")||"[]");}catch(e){return [];}}
+function saveHistory(item){
+  if(!item.hash) return;
+  try{
+    var h=loadHistory().filter(function(x){return x.n!==item.name;});
+    h.push({n:item.name,hash:item.hash,hashFlip:item.hashFlip});
+    localStorage.setItem("sms_hist",JSON.stringify(h.slice(-500)));
+  }catch(e){}
+}
+function clearHistory(){
+  try{localStorage.removeItem("sms_hist");}catch(e){}
+  alert("Similarity history cleared.");
+}
+
+function computeRisk(idx){
+  var me=filesData[idx],wm=0,wmName="",wv=0,wvName="",wvHist=false;
+  var names={};
+  filesData.forEach(function(o){names[o.name]=1;});
+  filesData.forEach(function(o,j){
+    if(j===idx) return;
+    var s=Math.max(jaccard(me.keywords,o.keywords),titleSim(me.title,o.title));
+    if(s>wm){wm=s;wmName=o.name;}
+    var v=visualSim(me,o);
+    if(v>wv){wv=v;wvName=o.name;wvHist=false;}
+  });
+  loadHistory().forEach(function(h){
+    if(names[h.n]) return;
+    var v=visualSim(me,h);
+    if(v>wv){wv=v;wvName=h.n;wvHist=true;}
+  });
+  var g=new Set(vectorPool.concat(photoPool)),generic=0;
+  me.keywords.forEach(function(k){if(g.has(k)) generic++;});
+  var vp=Math.round(wv*100),mp=Math.round(wm*100);
+  var cls="ok",parts=[];
+  if(wv>=0.9){cls="high";parts.push("Artwork looks almost the same ("+vp+"%) as <b>"+escapeHTML(wvName)+"</b>"+(wvHist?" (analysed earlier)":"")+". Do not upload both.");}
+  else if(wv>=0.8){cls="mid";parts.push("Artwork looks visually similar ("+vp+"%) to <b>"+escapeHTML(wvName)+"</b>"+(wvHist?" (analysed earlier)":"")+". Make sure it is clearly different.");}
+  if(wm>=RULES.similarityHigh){cls="high";parts.push("Title/keywords are very close ("+mp+"%) to "+escapeHTML(wmName)+". Rewrite them.");}
+  else if(wm>=RULES.similarityWarn){if(cls==="ok") cls="mid";parts.push("Title/keywords overlap ("+mp+"%) with "+escapeHTML(wmName)+". Make the title more specific.");}
+  if(!parts.length) parts.push("Low risk. Closest visual match "+vp+"%, closest metadata match "+mp+"%.");
+  if(me.keywords.length<RULES.keywordCount){if(cls==="ok") cls="mid";parts.push("Only "+me.keywords.length+" keywords.");}
+  if(generic>=18){if(cls==="ok") cls="mid";parts.push("Many keywords are generic. Add subject-specific words.");}
+  if(!me.hash) parts.push("No visual check for this file because no preview image exists.");
+  return {cls:cls,msg:parts.join(" ")};
+}
+
+async function postJson(url,fd){
+  var ctl=new AbortController();
+  var t=setTimeout(function(){ctl.abort();},45000);
+  try{return await fetch(url,{method:"POST",body:fd,signal:ctl.signal});}
+  finally{clearTimeout(t);}
+}
+async function uploadTmpfiles(f){
+  var fd=new FormData();fd.append("file",f);
+  var r=await postJson("https://tmpfiles.org/api/v1/upload",fd);
+  var j=await r.json();
+  return j.data.url.replace("tmpfiles.org/","tmpfiles.org/dl/");
+}
+async function uploadUguu(f){
+  var fd=new FormData();fd.append("files[]",f);
+  var r=await postJson("https://uguu.se/upload",fd);
+  var j=await r.json();
+  return j.files[0].url;
+}
+async function uploadLitter(f){
+  var fd=new FormData();fd.append("reqtype","fileupload");fd.append("time","72h");fd.append("fileToUpload",f);
+  var r=await postJson("https://litterbox.catbox.moe/resources/internals/api.php",fd);
+  var t=(await r.text()).trim();
+  if(!/^https?:\/\//.test(t)) throw new Error("bad reply");
+  return t;
+}
+
+async function copyLink(id){
+  var item=getItem(id);if(!item) return;
+  var btn=document.getElementById("lb"+id),box=document.getElementById("lk"+id);
+  if(!btn||!box) return;
+  var src=await getSearchFile(item);
+  if(!src){box.value="";box.placeholder="No preview image for this file";return;}
+  var ext=src.type==="image/png"?"png":"jpg";
+  var f=new File([src],"stock"+id+"-"+Date.now()+"."+ext,{type:src.type});
+  /* download the image first so it can be uploaded to TinEye by hand */
+  var isRaster=(item.type==="jpg"||item.type==="png");
+  var dlName=isRaster?item.name:item.name.replace(/\.[^.]+$/,"")+"-preview.png";
+  var dl=document.createElement("a");
+  dl.href=URL.createObjectURL(src);dl.download=dlName;
+  document.body.appendChild(dl);dl.click();dl.remove();
+  banner("⬇️ Image saved to Downloads as "+escapeHTML(dlName)+". Open tineye.com, tap Upload and choose it.","ok");
+  btn.disabled=true;btn.textContent="⏳ Uploading...";
+  var url="";
+  var hosts=[["uguu.se",uploadUguu],["litterbox.catbox.moe",uploadLitter],["tmpfiles.org",uploadTmpfiles]];
+  var hostName="";
+  for(var i=0;i<hosts.length&&!url;i++){
+    try{url=await hosts[i][1](f);hostName=hosts[i][0];}catch(e){url="";}
+  }
+  btn.disabled=false;
+  if(!url){
+    btn.textContent="🔗 Copy Link + Download";
+    box.value="";box.placeholder="Upload failed. Try again, or use the Download/TinEye upload way.";
+    return;
+  }
+  item.shareUrl=url;item.shareHost=hostName;box.value=url;
+  var lh=document.getElementById("lh"+id);if(lh) lh.textContent="Host: "+hostName;
+  var ok=false;
+  try{await navigator.clipboard.writeText(url);ok=true;}catch(e){}
+  if(!ok){box.focus();box.select();}
+  btn.textContent=ok?"✅ Copied":"Select & copy";
+  setTimeout(function(){btn.textContent="🔗 Copy Link + Download";},3000);
+}
+
+function canvasToFile(c){
+  return new Promise(function(res){
+    c.toBlob(function(b){res(b?new File([b],"search.png",{type:"image/png"}):null);},"image/png");
+  });
+}
+
+async function getSearchFile(item){
+  if(item.type==="jpg"||item.type==="png") return item.file;
+  var c=item.canvas;
+  if(item.type==="svg"&&item.previewUrl) c=await imgToCanvas(item.previewUrl,800);
+  return c?await canvasToFile(c):null;
+}
+
+async function reverseSearch(id,site){
+  var item=getItem(id);if(!item) return;
+  if(site==="tineye"){
+    var isVec=(item.type!=="jpg"&&item.type!=="png");
+    if(isVec){
+      var pf=await getSearchFile(item);
+      if(pf){
+        var a=document.createElement("a");
+        a.href=URL.createObjectURL(pf);
+        a.download=item.name.replace(/\.[^.]+$/,"")+"-preview.png";
+        document.body.appendChild(a);a.click();a.remove();
+      }
+    }
+    window.open("https://tineye.com/","_blank");
+    banner("🌐 TinEye opened in a new tab. Tap its upload button and choose "+(isVec?"the PNG preview just saved in your Downloads.":"this file."),"run");
+    return;
+  }
+  var f=await getSearchFile(item);
+  if(!f){alert("No preview image for this file, so it cannot be sent. Export a PNG or JPG and try again.");return;}
+  var cfg=site==="tineye"
+    ?{action:"https://tineye.com/search",field:"image",extra:{}}
+    :{action:"https://www.google.com/searchbyimage/upload",field:"encoded_image",extra:{image_content:"",sbisrc:"StockMetadataStudio"}};
+  try{
+    var form=document.createElement("form");
+    form.method="POST";form.action=cfg.action;form.enctype="multipart/form-data";form.target="_blank";
+    form.style.display="none";
+    var inp=document.createElement("input");
+    inp.type="file";inp.name=cfg.field;
+    var dt=new DataTransfer();dt.items.add(f);inp.files=dt.files;
+    form.appendChild(inp);
+    Object.keys(cfg.extra).forEach(function(k){
+      var h=document.createElement("input");h.type="hidden";h.name=k;h.value=cfg.extra[k];form.appendChild(h);
+    });
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(function(){form.remove();},3000);
+  }catch(e){
+    alert("Automatic upload is not supported in this browser. The site will open and you can upload the file yourself.");
+    window.open(site==="tineye"?"https://tineye.com/":"https://lens.google.com/","_blank");
+  }
+}
+
+function checkOne(id){
+  var i=getIndex(id);if(i<0) return;
+  var el=document.getElementById("risk"+id);if(!el) return;
+  var r=computeRisk(i);
+  var extra=filesData.length<2?" Only one file uploaded, so there is nothing to compare with yet.":"";
+  el.className="risk "+r.cls;
+  el.innerHTML="<b>Similarity Risk:</b> "+r.msg+extra;
+}
+
+function runRisk(alertUser){
+  filesData.forEach(function(item,i){
+    var el=document.getElementById("risk"+item.id);
+    if(!el) return;
+    var r=computeRisk(i);
+    el.className="risk "+r.cls;
+    el.innerHTML="<b>Similarity Risk:</b> "+r.msg;
+  });
+  if(alertUser&&!filesData.length) alert("Upload files first.");
+}
+
+/* =========================
+   UI
+========================= */
+var nextId=1;
+var batchTotal=0,batchDone=0;
+function banner(text,cls){var b=document.getElementById('banner');if(b){b.className='banner '+(cls||'');b.innerHTML=text;}}
+
+function analyzeAll(){
+  if(!filesData.length){alert('Upload files first.');return;}
+  if(processing){alert('Analysis is already running.');return;}
+  if(!confirm('Re-analyse all files? Manual edits to Title and Keywords will be replaced.')) return;
+  batchTotal=filesData.length;batchDone=0;
+  filesData.forEach(function(it){it.state='queued';it.stage='Waiting in queue...';paintCard(it);queue.push(it.id);});
+  runQueue();
+}
+
+function catName(n){
+  for(var i=0;i<categories.length;i++) if(String(categories[i][0])===String(n)) return categories[i][1];
+  return "Graphic Resources";
+}
+
+function categoryOptions(sel){
+  return categories.map(function(c){
+    return '<option value="'+c[0]+'"'+(c[0]===sel?" selected":"")+'>'+c[1]+"</option>";
+  }).join("");
+}
+
+function cardHTML(item){
+  var prev;
+  if(item.previewEl==="img"){
+    prev='<div class="preview"><img src="'+item.previewUrl+'" alt="Preview"></div>';
+  }else if(item.previewEl==="canvas"){
+    prev='<div class="preview" id="pv'+item.id+'"></div>';
+  }else{
+    prev='<div class="preview"><div class="fileBox"><div class="fileIcon">📄</div><strong>'+escapeHTML(item.type.toUpperCase())+' FILE</strong><br><span>'+escapeHTML(item.name)+'</span><p class="warning">'+escapeHTML(item.previewNote||"Preview not available. Metadata still works.")+'</p></div></div>';
+  }
+  var statusCls=item.state==="ready"?"success":(item.state==="error"?"warning":"");
+  var statusTxt=item.state==="ready"?("✓ Metadata ready: "+item.keywords.length+" keywords"+(item.aiUsed?" (AI + filename)":" (filename only)")):(item.state==="error"?("Preview problem: "+escapeHTML(item.note||"")):"⏳ "+escapeHTML(item.stage||"Waiting..."));
+  var kw=item.keywords.map(function(k,i){return '<span class="keyword'+(i<RULES.priorityCount?" top":"")+'">'+escapeHTML(k)+"</span>";}).join("");
+  return '<div class="cardTop"><span class="serial" id="sn'+item.id+'">#'+(getIndex(item.id)+1)+'</span><span class="badge">'+escapeHTML(item.type.toUpperCase())+'</span><span class="fname">'+escapeHTML(item.name)+'</span></div>'+
+  prev+
+  '<div class="linkRow"><input type="text" readonly id="lk'+item.id+'" placeholder="Image link appears here" value="'+escapeHTML(item.shareUrl||'')+'"><button class="smallBtn" id="lb'+item.id+'" onclick="copyLink('+item.id+')">🔗 Copy Link + Download</button></div><div class="counter" id="lh'+item.id+'">'+(item.shareHost?'Host: '+escapeHTML(item.shareHost):'')+'</div>'+
+  '<button class="simBtn" onclick="checkOne('+item.id+')">🔍 Similarity Check</button>'+
+  '<div class="risk ok" id="risk'+item.id+'"><b>Similarity Risk:</b> tap the button above to check</div>'+
+  '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div><div class="counter">Google Lens: file is sent automatically. TinEye blocks automatic upload, so it opens tineye.com and you pick the file (SVG, EPS and AI: a PNG preview is saved to Downloads first).</div>'+
+  '<div class="status '+statusCls+'" id="st'+item.id+'">'+statusTxt+'</div>'+
+  '<div class="field"><label>Filename</label><input type="text" value="'+escapeHTML(item.name)+'" oninput="setField('+item.id+',\'name\',this.value)"></div>'+
+  '<div class="field"><label>Title</label><input type="text" id="ti'+item.id+'" value="'+escapeHTML(item.title)+'" oninput="setField('+item.id+',\'title\',this.value)"><div class="counter" id="tc'+item.id+'">'+item.title.length+' / '+RULES.titleMaxLength+'</div></div>'+
+  '<div class="field"><label>Keywords (first '+RULES.priorityCount+' = highest priority)</label><textarea id="kw'+item.id+'" oninput="updateKeywords('+item.id+',this.value)">'+escapeHTML(item.keywords.join(", "))+'</textarea><div class="counter" id="kc'+item.id+'">'+item.keywords.length+' / '+RULES.keywordCount+'</div><div class="keywords" id="kchips'+item.id+'">'+kw+'</div></div>'+
+  '<div class="field"><label>Adobe Category</label><select onchange="setField('+item.id+',\'category\',this.value)">'+categoryOptions(item.category)+'</select></div>'+
+  '<div class="row"><button onclick="copyOne('+item.id+')">Copy Metadata</button><button class="btn-light" onclick="moveItem('+item.id+',-1)">▲ Up</button><button class="btn-light" onclick="moveItem('+item.id+',1)">▼ Down</button><button class="danger" onclick="removeOne('+item.id+')">Remove</button></div>';
+}
+
+function getItem(id){
+  for(var i=0;i<filesData.length;i++) if(filesData[i].id===id) return filesData[i];
+  return null;
+}
+function getIndex(id){
+  for(var i=0;i<filesData.length;i++) if(filesData[i].id===id) return i;
+  return -1;
+}
+
+function paintCard(item){
+  var host=document.getElementById("card"+item.id);
+  if(!host){
+    host=document.createElement("div");
+    host.className="card";host.id="card"+item.id;
+    document.getElementById("results").appendChild(host);
+  }
+  host.innerHTML=cardHTML(item);
+  if(item.previewEl==="canvas"&&item.canvas){
+    var pv=document.getElementById("pv"+item.id);
+    if(pv){
+      var disp=document.createElement("canvas");
+      disp.width=item.canvas.width;disp.height=item.canvas.height;
+      disp.getContext("2d").drawImage(item.canvas,0,0);
+      pv.appendChild(disp);
+    }
+  }
+}
+
+function setField(id,field,value){
+  var item=getItem(id);if(!item) return;
+  item[field]=value;
+  if(field==="title"){
+    var c=document.getElementById("tc"+id);
+    if(c) c.textContent=value.length+" / "+RULES.titleMaxLength;
+  }
+}
+
+function updateKeywords(id,text){
+  var item=getItem(id);if(!item) return;
+  var arr=text.split(",").map(function(x){return x.trim().toLowerCase();}).filter(Boolean);
+  arr=arr.filter(function(v,i){return arr.indexOf(v)===i;});
+  item.keywords=arr.slice(0,RULES.keywordCount);
+  var c=document.getElementById("kc"+id);
+  if(c){
+    c.textContent=item.keywords.length+" / "+RULES.keywordCount+(arr.length>RULES.keywordCount?" (extra removed on copy)":"");
+  }
+  var chips=document.getElementById("kchips"+id);
+  if(chips){
+    chips.innerHTML=item.keywords.map(function(k,i){return '<span class="keyword'+(i<RULES.priorityCount?" top":"")+'">'+escapeHTML(k)+"</span>";}).join("");
+  }
+}
+
+function renumber(){
+  filesData.forEach(function(it,i){
+    var el=document.getElementById("sn"+it.id);
+    if(el) el.textContent="#"+(i+1);
+  });
+}
+
+function moveItem(id,dir){
+  var i=getIndex(id),j=i+dir;
+  if(i<0||j<0||j>=filesData.length) return;
+  var tmp=filesData[i];filesData[i]=filesData[j];filesData[j]=tmp;
+  var a=document.getElementById("card"+filesData[j].id);
+  var b=document.getElementById("card"+filesData[i].id);
+  var box=document.getElementById("results");
+  if(a&&b){
+    if(dir<0) box.insertBefore(a,b); else box.insertBefore(b,a);
+  }
+  renumber();
+}
+
+function removeOne(id){
+  var i=getIndex(id);if(i<0) return;
+  filesData.splice(i,1);
+  var el=document.getElementById("card"+id);
+  if(el) el.remove();
+  renumber();
+  runRisk(false);
+}
+
+function clearAll(){
+  if(!filesData.length) return;
+  if(!confirm("Remove all files?")) return;
+  filesData.length=0;queue.length=0;
+  document.getElementById("results").innerHTML="";
+  banner("Upload files to begin. Analysis starts automatically.");
+}
+
+/* =========================
+   PROCESSING QUEUE
+========================= */
+document.getElementById("fileInput").addEventListener("change",function(e){
+  var list=Array.from(e.target.files);
+  if(!processing&&!queue.length){batchTotal=0;batchDone=0;}
+  batchTotal+=list.length;
+  list.forEach(function(file){
+    var ext=file.name.split(".").pop().toLowerCase();
+    var type=ext==="jpeg"?"jpg":ext;
+    var item={
+      id:nextId++,file:file,name:file.name,type:type,
+      title:"",keywords:[],category:(type==="jpg"||type==="png")?8:8,
+      state:"queued",stage:"Waiting in queue...",previewEl:null,previewUrl:null,canvas:null,aiUsed:false
+    };
+    filesData.push(item);
+    paintCard(item);
+    queue.push(item.id);
+  });
+  e.target.value="";
+  runQueue();
+});
+
+async function runQueue(){
+  if(processing) return;
+  processing=true;
+  banner('🤖 Analysing '+batchDone+' / '+batchTotal+' ...','run');
+  while(queue.length){
+    var id=queue.shift();
+    var item=getItem(id);
+    if(!item) continue;
+    try{await processItem(item);}
+    catch(err){
+      item.state="error";item.note=err.message;
+      var m=buildMetadata(item.name,item.type,[]);
+      item.title=m.title;item.keywords=m.keywords;
+      paintCard(item);
+    }
+    batchDone++;
+    banner('🤖 Analysing '+batchDone+' / '+batchTotal+' ...','run');
+    await sleep(60);
+  }
+  processing=false;
+  runRisk(false);
+  banner('✅ Analysis complete. '+batchDone+' file(s) ready.','ok');
+}
+
+function stage(item,text){
+  item.stage=text;
+  var el=document.getElementById("st"+item.id);
+  if(el) el.textContent="⏳ "+text;
+}
+
+async function processItem(item){
+  var canvasForAI=null;
+  stage(item,"Reading file...");
+
+  if(item.type==="jpg"||item.type==="png"){
+    item.previewEl="img";
+    item.previewUrl=URL.createObjectURL(item.file);
+    paintCard(item);
+    stage(item,"Preparing image...");
+    canvasForAI=await imgToCanvas(item.previewUrl);
+  }
+  else if(item.type==="svg"){
+    item.previewEl="img";
+    item.previewUrl=await svgToUrl(item.file);
+    paintCard(item);
+    stage(item,"Preparing image...");
+    canvasForAI=await imgToCanvas(item.previewUrl);
+  }
+  else if(item.type==="ai"){
+    stage(item,"Rendering AI artwork preview...");
+    try{
+      var c=await renderAI(item.file);
+      item.canvas=c;item.previewEl="canvas";canvasForAI=c;
+    }catch(e){
+      item.previewEl=null;
+      item.previewNote="AI preview failed ("+e.message+"). Re-save the AI file with PDF Compatibility turned on to get a preview. Metadata still works from the file name.";
+    }
+    paintCard(item);
+  }
+  else if(item.type==="eps"){
+    stage(item,"Looking for EPS preview...");
+    try{
+      var r=await renderEPS(item.file,item);
+      item.canvas=r;item.previewEl="canvas";canvasForAI=r;
+    }catch(e){
+      item.previewEl=null;
+      item.previewNote="EPS preview failed ("+e.message+"). Metadata still works from the file name. Check your internet connection or export a PNG/JPG preview.";
+    }
+    paintCard(item);
+  }
+  else{
+    item.previewNote="Unsupported file type.";
+    paintCard(item);
+  }
+
+  if(canvasForAI){
+    try{item.hash=dHash(canvasForAI,false);item.hashFlip=dHash(canvasForAI,true);}catch(e){}
+  }
+  var labels=[];
+  if(canvasForAI){
+    stage(item,"AI is analysing the artwork...");
+    labels=await classify(canvasForAI);
+  }
+  item.aiUsed=labels.length>0;
+  stage(item,"Building title and keywords...");
+  var meta=buildMetadata(item.name,item.type,labels);
+  item.title=meta.title;
+  item.keywords=meta.keywords;
+  item.state="ready";
+  saveHistory(item);
+  paintCard(item);
+}
+
+/* =========================
+   COPY / EXPORT
+========================= */
+function clipboardWrite(text,okMsg){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(function(){alert(okMsg);},function(){prompt("Copy metadata:",text);});
+  }else{
+    prompt("Copy metadata:",text);
+  }
+}
+function copyOne(id){
+  var item=getItem(id);if(!item) return;
+  clipboardWrite("Title: "+item.title+"\n\nKeywords: "+item.keywords.join(", "),"Metadata copied!");
+}
+function copyAll(){
+  if(!filesData.length){alert("Upload files first.");return;}
+  var out="";
+  filesData.forEach(function(item,n){
+    out+="No: "+(n+1)+"\nFilename: "+item.name+"\nTitle: "+item.title+"\nKeywords: "+item.keywords.join(", ")+"\n\n";
+  });
+  clipboardWrite(out,"All metadata copied!");
+}
+function downloadCSV(){
+  if(!filesData.length){alert("Upload files first.");return;}
+  var csv="Filename,Title,Keywords,Category,Releases\n";
+  filesData.forEach(function(item){
+    var row=[item.name,item.title,item.keywords.join(", "),catName(item.category),""].map(function(v){
+      return '"'+String(v).replace(/"/g,'""')+'"';
+    }).join(",");
+    csv+=row+"\n";
+  });
+  var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="Adobe_Stock_Metadata.csv";
+  document.body.appendChild(a);a.click();a.remove();
+}
+</script>
+</body>
+</html>
