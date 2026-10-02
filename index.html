@@ -62,6 +62,14 @@ textarea{min-height:110px;resize:vertical}
 .risk.mid{background:#fffbeb;color:#b45309}
 .risk.high{background:#fef2f2;color:#b91c1c}
 .note{font-size:12px;line-height:1.7;color:#94a3b8;padding:0 6px}
+.header{position:relative}
+.menuBtn{position:absolute;top:12px;right:14px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:26px;line-height:1;cursor:pointer;padding:0}
+.menuBtn .dot{display:none;position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #1e3a8a}
+.menuBtn.on .dot{display:block}
+.menuBox{display:none;position:absolute;top:58px;right:14px;width:min(320px,calc(100vw - 28px));background:#fff;color:#172033;border-radius:16px;padding:14px;box-shadow:0 12px 36px rgba(15,23,42,.3);z-index:50}
+.menuBox.open{display:block}
+.menuBox input{width:100%;margin-bottom:8px}
+.menuBox .mrow{display:flex;gap:8px;margin-bottom:6px}
 </style>
 </head>
 <body>
@@ -72,6 +80,15 @@ textarea{min-height:110px;resize:vertical}
 <div>
 <h1>Stock Metadata Studio</h1>
 <p>Fast metadata workspace for stock contributors</p>
+</div>
+<button class="menuBtn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu">⋮<span class="dot" id="menuDot"></span></button>
+<div class="menuBox" id="menuBox" onclick="event.stopPropagation()">
+<div style="font-size:14px;font-weight:700;margin-bottom:8px">🔑 API Key (Gemini)</div>
+<input type="password" id="gemKey" placeholder="Paste Gemini API key here" autocomplete="off">
+<input type="text" id="gemModel" placeholder="Model">
+<div class="mrow"><button class="btn-green" onclick="saveGemini()">Save</button><button class="btn-light" onclick="clearGemini()">Remove Key</button></div>
+<div class="counter" id="gemStatus"></div>
+<div class="counter">Free key: aistudio.google.com. Stored only in this browser. With a key, each image is sent to Google. Without a key, the built-in model is used.</div>
 </div>
 </div>
 
@@ -89,17 +106,7 @@ textarea{min-height:110px;resize:vertical}
 </div>
 <div class="ai" id="aiStatus">AI model: not loaded yet (loads once on first upload, then cached by browser)</div>
 <div class="bar"><div id="aiBar"></div></div>
-<div id="gemPanel" style="margin-top:14px;padding-top:14px;border-top:1px solid #e8edf5">
-<div style="font-size:13px;font-weight:700;margin-bottom:8px">✨ Gemini AI (free key, better Title and Keywords)</div>
-<div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
-<input type="password" id="gemKey" placeholder="Paste Gemini API key" autocomplete="off" style="flex:2 1 200px">
-<input type="text" id="gemModel" placeholder="Model" style="flex:1 1 140px">
-<button class="btn-green" onclick="saveGemini()">Save</button>
-<button class="btn-light" onclick="clearGemini()">Remove Key</button>
-</div>
-<div class="counter" id="gemStatus"></div>
-<div class="counter">Get a free key at aistudio.google.com. The key is stored only in this browser. With a key, each image is sent to Google for analysis. Without a key or if Gemini fails, the built-in model is used.</div>
-</div>
+
 </div>
 
 <div class="banner" id="banner">Upload files to begin. Analysis starts automatically.</div>
@@ -221,11 +228,14 @@ function loadModel(){
 /* =========================
    GEMINI
 ========================= */
-var GEM_DEFAULT_MODEL="gemini-2.5-flash";
+var GEM_DEFAULT_MODEL="gemini-3.8-flash";
 function gemGet(k){try{return localStorage.getItem(k)||"";}catch(e){return "";}}
 function gemKey(){return gemGet("sms_gem_key").trim();}
-function gemModel(){return (gemGet("sms_gem_model").trim()||GEM_DEFAULT_MODEL);}
+function gemModel(){return (gemGet("sms_gem_model2").trim()||GEM_DEFAULT_MODEL);}
+function toggleMenu(e){e.stopPropagation();document.getElementById("menuBox").classList.toggle("open");}
+document.addEventListener("click",function(){var m=document.getElementById("menuBox");if(m)m.classList.remove("open");});
 function gemUI(){
+  var mb=document.getElementById("menuBtn");if(mb) mb.className="menuBtn"+(gemKey()?" on":"");
   var st=document.getElementById("gemStatus");if(!st) return;
   document.getElementById("gemModel").value=gemModel();
   st.textContent=gemKey()?"✅ Gemini is ON ("+gemModel()+"). New analysis uses Gemini.":"Gemini is OFF. Using the built-in model.";
@@ -235,7 +245,7 @@ function saveGemini(){
   var m=document.getElementById("gemModel").value.trim()||GEM_DEFAULT_MODEL;
   try{
     if(k) localStorage.setItem("sms_gem_key",k);
-    localStorage.setItem("sms_gem_model",m);
+    localStorage.setItem("sms_gem_model2",m);
   }catch(e){alert("Could not save in this browser.");}
   document.getElementById("gemKey").value="";
   gemUI();
@@ -252,7 +262,7 @@ function canvasToJpegB64(c,maxSide){
   var x=t.getContext("2d");
   x.fillStyle="#fff";x.fillRect(0,0,t.width,t.height);
   x.drawImage(c,0,0,t.width,t.height);
-  return t.toDataURL("image/jpeg",0.85).split(",")[1];
+  return t.toDataURL("image/jpeg",0.8).split(",")[1];
 }
 async function geminiAnalyze(canvas,item){
   var key=gemKey();
@@ -264,20 +274,32 @@ async function geminiAnalyze(canvas,item){
    "- category: the best matching number from: "+catList+".\n"+
    "Return exactly: {\"title\":\"...\",\"keywords\":[\"...\"],\"category\":8}";
   var body={
-    contents:[{parts:[{text:prompt},{inline_data:{mime_type:"image/jpeg",data:canvasToJpegB64(canvas,1024)}}]}],
-    generationConfig:{responseMimeType:"application/json",temperature:0.3}
+    contents:[{parts:[{text:prompt},{inline_data:{mime_type:"image/jpeg",data:canvasToJpegB64(canvas,768)}}]}],
+    generationConfig:{responseMimeType:"application/json",temperature:0.3,maxOutputTokens:2048,thinkingConfig:{thinkingBudget:0}}
   };
   var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(gemModel())+":generateContent";
-  var resp=null,tries=0;
-  while(tries<3){
+  var resp=null,tries=0,noThink=false;
+  while(tries<4){
     resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(body)});
-    if(resp.status===429||resp.status===503){tries++;stage(item,"Gemini is busy, retrying ("+tries+"/2)...");await sleep(8000);continue;}
+    if(resp.status===400&&!noThink){
+      noThink=true;
+      delete body.generationConfig.thinkingConfig;
+      continue;
+    }
+    if(resp.status===429||resp.status===503||resp.status===500){
+      tries++;
+      if(tries>=4) break;
+      var wait=(resp.status===429?6000:3000)*tries;
+      stage(item,"Gemini busy, retry "+tries+"/3 in "+Math.round(wait/1000)+"s...");
+      await sleep(wait);
+      continue;
+    }
     break;
   }
   if(!resp.ok){
     var msg="";
     try{var j=await resp.json();msg=(j.error&&j.error.message)||"";}catch(e){}
-    throw new Error("Gemini "+resp.status+(msg?": "+msg.slice(0,140):""));
+    throw new Error("Gemini "+resp.status+(msg?": "+msg.slice(0,400):""));
   }
   var data=await resp.json();
   var txt="";
@@ -876,10 +898,13 @@ document.getElementById("fileInput").addEventListener("change",function(e){
   runQueue();
 });
 
-async function runQueue(){
-  if(processing) return;
-  processing=true;
-  banner('🤖 Analysing '+batchDone+' / '+batchTotal+' ...','run');
+var renderChain=Promise.resolve();
+function withRenderLock(fn){
+  var run=renderChain.then(fn,fn);
+  renderChain=run.catch(function(){});
+  return run;
+}
+async function worker(){
   while(queue.length){
     var id=queue.shift();
     var item=getItem(id);
@@ -895,6 +920,15 @@ async function runQueue(){
     banner('🤖 Analysing '+batchDone+' / '+batchTotal+' ...','run');
     await sleep(60);
   }
+}
+async function runQueue(){
+  if(processing) return;
+  processing=true;
+  banner('🤖 Analysing '+batchDone+' / '+batchTotal+' ...','run');
+  var n=gemKey()?3:1;
+  var ws=[];
+  for(var i=0;i<n;i++) ws.push(worker());
+  await Promise.all(ws);
   processing=false;
   runRisk(false);
   banner('✅ Analysis complete. '+batchDone+' file(s) ready.','ok');
@@ -927,7 +961,7 @@ async function processItem(item){
   else if(item.type==="ai"){
     stage(item,"Rendering AI artwork preview...");
     try{
-      var c=await renderAI(item.file);
+      var c=await withRenderLock(function(){return renderAI(item.file);});
       item.canvas=c;item.previewEl="canvas";canvasForAI=c;
     }catch(e){
       item.previewEl=null;
@@ -938,7 +972,7 @@ async function processItem(item){
   else if(item.type==="eps"){
     stage(item,"Looking for EPS preview...");
     try{
-      var r=await renderEPS(item.file,item);
+      var r=await withRenderLock(function(){return renderEPS(item.file,item);});
       item.canvas=r;item.previewEl="canvas";canvasForAI=r;
     }catch(e){
       item.previewEl=null;
