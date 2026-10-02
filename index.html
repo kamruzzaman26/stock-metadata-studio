@@ -196,16 +196,7 @@ textarea{min-height:86px;resize:vertical}
   <label style="display:block;margin:7px 0"><input type="checkbox" id="pfUploaded"> The same original files have already been uploaded in Adobe Stock → Uploaded Files → New.</label>
   <div class="row">
     <button class="btn-green" onclick="openAdobeUploadedFiles()">🚀 Open Adobe Uploaded Files</button>
-    <button class="btn-slate" onclick="showAdobeCSVSteps()">📖 Exact Upload CSV Steps</button>
-  </div>
-  <div id="adobeCSVSteps" style="display:none;margin-top:10px;padding:12px;border-radius:12px;background:#fff;border:1px solid #dbe4f0;font-size:13px;line-height:1.65">
-    <b>Adobe Stock → Upload CSV</b><br>
-    1️⃣ Open <b>Uploaded Files</b>.<br>
-    2️⃣ Select the <b>New</b> tab to see your recently uploaded files.<br>
-    3️⃣ Click <b>Upload CSV</b>.<br>
-    4️⃣ Click <b>Choose CSV file</b> and select the CSV downloaded from this website.<br>
-    5️⃣ After upload, click <b>Refresh</b> and verify the titles, keywords and categories.<br>
-    <small>Adobe requires the CSV filenames to match the uploaded asset filenames exactly, including extension and capitalization.</small>
+    <button type="button" class="btn-green" id="adobeCsvDownloadBtn" onclick="downloadCSV(); return false;">⬇️ Adobe CSV Download</button>
   </div>
 </div>
 
@@ -1357,21 +1348,25 @@ function validateAdobeCSV(showUI){
 
 function downloadCSV(){
   if(!filesData.length){alert("Upload files first.");return;}
+
+  /* Validate and show the report, but NEVER block the CSV download. */
   var check=validateAdobeCSV(true);
-  if(!check.ok){
-    banner("❌ Adobe CSV তৈরি বন্ধ রাখা হয়েছে। Validator-এর errors আগে ঠিক করুন.","warning");
-    alert("CSV download করা হয়নি। Adobe CSV Validator-এর errors আগে ঠিক করুন.");
-    return;
-  }
   var csv=buildAdobeCSVText();
   var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a");
   var url=URL.createObjectURL(blob);
   a.href=url;
   a.download="Adobe_Stock_Metadata.csv";
-  document.body.appendChild(a);a.click();a.remove();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
-  banner("✅ Adobe CSV validated and downloaded successfully.","ok");
+
+  if(check.ok){
+    banner("✅ Adobe CSV downloaded successfully.","ok");
+  }else{
+    banner("⬇️ Adobe CSV downloaded successfully. Validator-এ "+check.errors.length+"টি issue দেখানো হয়েছে—প্রয়োজনে ঠিক করে আবার download করুন.","warning");
+  }
 }
 gemUI();
 updateGoogleAISelectedFile();
