@@ -14,6 +14,9 @@ body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-g
 .header p{margin:0;opacity:.8;font-size:14px}
 .panel{background:#fff;border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 8px 28px rgba(15,23,42,.08);border:1px solid #e8edf5}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px}
+.mainActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,auto));gap:10px;margin-top:12px}
+.mainActions button{width:100%;min-height:54px}
+@media(max-width:650px){.mainActions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mainActions button{min-height:50px;padding:11px 6px;font-size:12px}}
 button,.uploadBtn{border:0;border-radius:14px;padding:13px 18px;font-weight:700;cursor:pointer;font-size:15px;color:#fff;font-family:inherit;transition:transform .12s,box-shadow .12s}
 button:active,.uploadBtn:active{transform:scale(.97)}
 .uploadBtn{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 6px 16px rgba(37,99,235,.35);font-size:17px;padding:16px}
@@ -51,7 +54,7 @@ input[type=file]{display:none}
 .field label{display:block;font-size:11px;font-weight:800;margin-bottom:6px;color:#64748b;text-transform:uppercase;letter-spacing:.6px}
 input[type=text],textarea,select{width:100%;border:1.5px solid #dbe3ee;border-radius:14px;padding:12px 14px;font-size:15px;font-family:inherit;background:#fbfcfe;color:#172033}
 input[type=text]:focus,textarea:focus,select:focus{outline:0;border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.15)}
-textarea{min-height:110px;resize:vertical}
+textarea{min-height:86px;resize:vertical}
 .keywords{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
 .keyword{background:#eef2f7;padding:7px 12px;border-radius:999px;font-size:12px;color:#334155}
 .keyword.top{background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#fff;font-weight:600}
@@ -68,11 +71,59 @@ textarea{min-height:110px;resize:vertical}
 .menuBtn.on .dot{display:block}
 .menuBox{display:none;position:absolute;top:58px;right:14px;width:min(320px,calc(100vw - 28px));background:#fff;color:#172033;border-radius:16px;padding:14px;box-shadow:0 12px 36px rgba(15,23,42,.3);z-index:50}
 .menuBox.open{display:block}
+.adobeReady{margin-top:12px;padding:14px;border-radius:16px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;display:none}.adobeReady.show{display:block}.adobeReady strong{display:block;font-size:15px;margin-bottom:5px}.adobeReady button{margin-top:9px}.adobeReady a{color:inherit;text-decoration:none}
+.csvPreviewPanel{margin-top:12px;border:1px solid #dbe4f0;border-radius:18px;padding:14px;background:#f8fafc}
+.csvPreviewPanel h3{margin:0 0 5px;font-size:16px;color:#172033}
+.csvPreviewWrap{overflow:auto;max-height:360px;border:1px solid #dbe4f0;border-radius:12px;background:#fff;margin-top:10px}
+.csvPreviewTable{width:100%;border-collapse:collapse;min-width:760px;font-size:12px}
+.csvPreviewTable th{position:sticky;top:0;background:#eef3f8;color:#334155;text-align:left;padding:9px;border-bottom:1px solid #dbe4f0;z-index:1}
+.csvPreviewTable td{padding:8px 9px;border-bottom:1px solid #edf1f5;vertical-align:top;line-height:1.45}
+.csvPreviewTable td:first-child{white-space:nowrap;font-weight:700}
+.csvPreviewTable .csvKw{max-width:390px;white-space:normal}
+.csvPreviewEmpty{padding:14px;color:#64748b;font-size:13px}
+.adobeValidator{margin-top:14px;border:1px solid #dbe4f0;border-radius:18px;padding:14px;background:#f8fafc}
+.adobeValidator h3{margin:0 0 6px;font-size:16px;color:#172033}
+.validatorSummary{font-size:13px;line-height:1.6;margin:8px 0}
+.validatorList{margin:8px 0 0;padding-left:20px;font-size:12px;line-height:1.65}
+.validatorGood{color:#047857}
+.validatorWarn{color:#b45309}
+.validatorBad{color:#b91c1c}
+.validatorMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.validatorPill{padding:7px 10px;border-radius:999px;background:#e8eef7;color:#334155;font-size:12px;font-weight:700}
+
 .menuBox input{width:100%;margin-bottom:8px}
 .menuBox .mrow{display:flex;gap:8px;margin-bottom:6px}
+
+.quickTools{margin:12px 0;border:1px solid #dbe4f0;border-radius:18px;padding:12px;background:#f8fafc}
+.quickToolsTitle{font-size:15px;font-weight:800;color:#172033;margin-bottom:9px}
+.quickToolsGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+@media(max-width:650px){.quickToolsGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.quickToolBtn{font-size:11px;min-height:42px;padding:7px 5px}}
+.quickToolBtn{display:flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 10px;border:1px solid #dbe4f0;border-radius:11px;background:#fff;color:#172033;text-decoration:none;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.quickToolBtn:hover{transform:translateY(-1px);box-shadow:0 3px 10px rgba(15,23,42,.08);background:#f1f5f9}
+.quickToolBtn small{font-size:10px;font-weight:500;color:#64748b}
+
+
+.aiPastePanel{margin:12px 0;border:1px solid #bfdbfe;border-radius:18px;padding:14px;background:linear-gradient(180deg,#eff6ff,#f8fafc)}
+.aiPasteTitle{font-size:16px;font-weight:800;color:#172033;margin-bottom:5px}
+.aiPasteHelp{font-size:12px;color:#475569;line-height:1.55;margin-bottom:10px}
+.aiPrompt{width:100%;min-height:145px;resize:vertical;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:12px;padding:10px;background:#fff;color:#172033;font:13px/1.5 monospace}
+.aiPasteRow{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.aiPasteStatus{margin-top:9px;padding:9px 11px;border-radius:10px;background:#fff;border:1px solid #dbe4f0;font-size:12px;color:#475569}
+.aiPasteStatus.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+.aiPasteStatus.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+@media(max-width:650px){.aiPasteRow>*{flex:1 1 100%}}
+
+.aiStepBox{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0}
+.aiStep{background:#f8fafc;border:1px solid #dbe4f0;border-radius:12px;padding:11px;font-size:13px;line-height:1.5}
+.aiStep span{color:#475569}
+@media(max-width:760px){.aiStepBox{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
+
+
+
+
 <div class="container">
 
 <div class="header">
@@ -92,35 +143,73 @@ textarea{min-height:110px;resize:vertical}
 </div>
 </div>
 
+<div class="quickTools" id="quickTools">
+  <div class="quickToolsTitle">⚡ Quick Tools</div>
+  <div class="quickToolsGrid">
+    <a class="quickToolBtn" href="https://www.shutterstock.com/image-vector/crassula-123280909?trackingId=92c4e0a8-83a3-4d7f-9031-fee08917d75c&listId=searchResults" target="_blank" rel="noopener">📸 Shutterstock</a>
+    <a class="quickToolBtn" href="https://stock.adobe.com/search/images?filters%5Bcontent_type%3Aphoto%5D=1&filters%5Bcontent_type%3Aillustration%5D=1&filters%5Bcontent_type%3Azip_vector%5D=1&filters%5Bcontent_type%3Avideo%5D=0&filters%5Bcontent_type%3Atemplate%5D=0&filters%5Bcontent_type%3A3d%5D=0&filters%5Bcontent_type%3Aaudio%5D=0&filters%5Binclude_stock_enterprise%5D=0&filters%5Bis_editorial%5D=0&filters%5Bcontent_type%3Aimage%5D=1&filters%5Bfree_collection%5D=0&k=Nature+Icons&order=nb_downloads&price%5B%24%5D=1&search_page=1&get_facets=0" target="_blank" rel="noopener">🅰️ Adobe Stock</a>
+    <a class="quickToolBtn" href="https://www.google.com/search?udm=50&aep=11" target="_blank" rel="noopener">🤖 Google AI Mode</a>
+    <a class="quickToolBtn" href="https://flow.google.com/" target="_blank" rel="noopener">🎨 Google Flow</a>
+    <a class="quickToolBtn" href="https://www.canva.com/design/DAHWkTeqUDg/u9XAG-jOMKtYFKUzMcjr1g/edit?ui=eyJFIjp7IkE_IjoiTiIsIlMiOiJBQUY4eHV2T3NGcyIsIlQiOjEzfX0" target="_blank" rel="noopener">✏️ Canva Trace</a>
+    <a class="quickToolBtn" href="https://contributor.stock.adobe.com/uploads" target="_blank" rel="noopener">🅰️ Adobe Stock Contributor</a>
+    <a class="quickToolBtn" href="https://contributor.stock.adobe.com/uploads" target="_blank" rel="noopener">📊 Adobe CSV Upload</a>
+  </div>
+</div>
+
 <div class="panel">
 <div class="toolbar">
 <label class="uploadBtn">📁 Upload JPG / PNG / SVG / EPS / AI
 <input id="fileInput" type="file" multiple accept=".jpg,.jpeg,.png,.svg,.eps,.ai,image/jpeg,image/png,image/svg+xml">
 </label>
-<button class="btn-analyze" onclick="analyzeAll()">🤖 Analyze</button>
-<button class="btn-slate" onclick="runRisk(true)">🔍 Similarity</button>
-<button class="btn-green" onclick="downloadCSV()">💾 Adobe CSV</button>
-<button class="btn-slate" onclick="copyAll()">📋 Copy</button>
-<button class="btn-light" onclick="clearHistory()">🧹 Clear History</button>
-<button class="danger" onclick="clearAll()">🗑️ Clear</button>
 </div>
-<div class="ai" id="aiStatus">AI model: not loaded yet (loads once on first upload, then cached by browser)</div>
+<div class="mainActions">
+  <button class="btn-analyze" onclick="analyzeAll()" title="Analyze all uploaded files with AI">🤖 AI Analyze</button>
+  <button class="btn-slate" onclick="checkAll()" title="Check similarity risk across uploaded files">🔍 Similarity</button>
+  <button class="btn-green" onclick="downloadCSV()" title="Validate and download Adobe Stock CSV">💾 Adobe CSV</button>
+  <button class="btn-slate" onclick="copyAll()" title="Copy all Title and Keywords metadata">📋 Copy All</button>
+  <button class="btn-light" onclick="clearHistory()" title="Clear saved similarity history">🧹 Clear History</button>
+  <button class="danger" onclick="clearAll()" title="Remove all uploaded files from the workspace">🗑️ Clear</button>
+</div>
+<div class="ai" id="aiStatus">AI analysis is optional</div>
 <div class="bar"><div id="aiBar"></div></div>
 
 </div>
 
-<div class="banner" id="banner">Upload files to begin. Analysis starts automatically.</div>
+<div class="banner" id="banner">Upload files. Paste Title and Keywords.</div>
 
-<div class="workflow">
-<b>Adobe Stock Workflow</b><br>
-1. Upload files (batch OK) → 2. Wait for the green "Metadata ready" status → 3. Review Title and the first 10 keywords (dark chips = highest priority) → 4. Fix anything wrong by hand → 5. Check the Similarity Risk box → 6. Choose Category per file → 7. Copy Metadata or download Adobe CSV → 8. Upload files in Adobe Stock Contributor portal, then import the CSV.
-</div>
+<div class="workflow"><b>Adobe Stock</b> → Upload → paste Title + Keywords → CSV</div>
 
 <div id="results"></div>
 
-<p class="note">
-Files are processed one at a time so mobile Chrome does not freeze. AI files are rendered only if they are PDF-compatible. EPS files are drawn from embedded PDF or JPEG data, or with the Ghostscript renderer (about 16 MB download the first time, and the page may pause briefly while it draws). The AI model gives general object labels, so always review the Title and keywords before submitting to Adobe Stock.
-</p>
+<div class="csvPreviewPanel" id="csvPreviewPanel">
+  <h3>👀 Adobe Stock CSV Preview</h3>
+  <div class="validatorSummary" id="csvPreviewSummary">Click “Preview CSV” to inspect the exact rows before download.</div>
+  <button class="btn-slate" onclick="previewAdobeCSV()">👀 Preview CSV</button>
+  <div id="csvPreviewBody"></div>
+</div>
+
+<div id="adobePreflight" class="adobeValidator" style="margin-top:12px">
+  <h3>📋 Adobe Stock Preflight Checklist</h3>
+  <div class="validatorSummary" id="preflightSummary">Complete these checks before opening Adobe Contributor.</div>
+  <label style="display:block;margin:7px 0"><input type="checkbox" id="pfOriginal"> Original filenames are unchanged and match the files I will upload to Adobe Stock.</label>
+  <label style="display:block;margin:7px 0"><input type="checkbox" id="pfCsv"> Adobe CSV Validator shows <b>CSV Ready</b> with no errors.</label>
+  <label style="display:block;margin:7px 0"><input type="checkbox" id="pfUploaded"> The same original files have already been uploaded in Adobe Stock → Uploaded Files → New.</label>
+  <div class="row">
+    <button class="btn-green" onclick="openAdobeUploadedFiles()">🚀 Open Adobe Uploaded Files</button>
+    <button class="btn-slate" onclick="showAdobeCSVSteps()">📖 Exact Upload CSV Steps</button>
+  </div>
+  <div id="adobeCSVSteps" style="display:none;margin-top:10px;padding:12px;border-radius:12px;background:#fff;border:1px solid #dbe4f0;font-size:13px;line-height:1.65">
+    <b>Adobe Stock → Upload CSV</b><br>
+    1️⃣ Open <b>Uploaded Files</b>.<br>
+    2️⃣ Select the <b>New</b> tab to see your recently uploaded files.<br>
+    3️⃣ Click <b>Upload CSV</b>.<br>
+    4️⃣ Click <b>Choose CSV file</b> and select the CSV downloaded from this website.<br>
+    5️⃣ After upload, click <b>Refresh</b> and verify the titles, keywords and categories.<br>
+    <small>Adobe requires the CSV filenames to match the uploaded asset filenames exactly, including extension and capitalization.</small>
+  </div>
+</div>
+
+<p class="note">Original filenames stay unchanged.</p>
 </div>
 
 <script>
@@ -684,6 +773,73 @@ function canvasToFile(c){
   });
 }
 
+/* =========================
+   COPY IMAGE
+   Copies the rendered SVG/image as PNG to the system clipboard.
+   Works on HTTPS (GitHub Pages) and supported mobile/desktop browsers.
+========================= */
+async function getCopyCanvas(item){
+  if(!item) return null;
+  if(item.canvas) return item.canvas;
+
+  var url=null;
+  try{
+    if(item.previewUrl){
+      url=item.previewUrl;
+    }else if(item.type==="jpg"||item.type==="png"){
+      url=URL.createObjectURL(item.file);
+    }else if(item.type==="svg"){
+      url=await svgToUrl(item.file);
+      item.previewUrl=url;
+    }
+    if(!url) return null;
+    return await imgToCanvas(url,1600);
+  }catch(e){
+    return null;
+  }
+}
+
+function canvasPngBlob(c){
+  return new Promise(function(resolve){
+    try{
+      c.toBlob(function(blob){resolve(blob||null);},"image/png");
+    }catch(e){resolve(null);}
+  });
+}
+
+async function copyImage(id){
+  var item=getItem(id);
+  if(!item) return;
+
+  if(!window.isSecureContext || !navigator.clipboard || !window.ClipboardItem){
+    alert("Image copy needs HTTPS. Open the site from your GitHub Pages address (https://...), not a local file/downloads page.");
+    return;
+  }
+
+  banner("📋 Preparing image for clipboard...","run");
+  var c=await getCopyCanvas(item);
+  if(!c){
+    banner("⚠️ Image preview could not be prepared.","warning");
+    return;
+  }
+
+  var blob=await canvasPngBlob(c);
+  if(!blob){
+    banner("⚠️ PNG copy data could not be created.","warning");
+    return;
+  }
+
+  try{
+    /* ClipboardItem is the correct API for copying an actual image, not its URL. */
+    var clipItem=new ClipboardItem({"image/png":blob});
+    await navigator.clipboard.write([clipItem]);
+    banner("✅ Image copied. You can paste it directly into Canva, Adobe, chat, or another app.","ok");
+  }catch(err){
+    console.error("Image clipboard error:",err);
+    banner("⚠️ Browser blocked image clipboard. Use the GitHub Pages HTTPS version and allow clipboard access.","warning");
+  }
+}
+
 async function getSearchFile(item){
   if(item.type==="jpg"||item.type==="png") return item.file;
   var c=item.canvas;
@@ -693,7 +849,7 @@ async function getSearchFile(item){
 
 async function reverseSearch(id,site){
   var item=getItem(id);if(!item) return;
-  var url=site==="tineye"?"https://tineye.com/":"https://lens.google.com/";
+  var url=site==="tineye"?"https://tineye.com/":"https://www.google.com/";
   var label=site==="tineye"?"TinEye":"Google Lens";
   window.open(url,"_blank");
   await downloadImage(id);
@@ -701,13 +857,8 @@ async function reverseSearch(id,site){
 }
 
 function makeFileName(item){
-  var base=(item.title||"").replace(/[\\\/:*?"<>|,.;]/g," ").replace(/\s+/g," ").trim().slice(0,110).trim();
-  if(!base) base=(item.origName||item.name).replace(/\.[^.]+$/,"");
-  var ext=item.ext||"jpg";
-  var name=base+"."+ext,n=1;
-  function taken(nm){return filesData.some(function(o){return o!==item&&o.name===nm;});}
-  while(taken(name)){n++;name=base+" "+n+"."+ext;}
-  return name;
+  // Original uploaded filename is the permanent metadata key.
+  return item.origName || item.name || ("file-" + item.id + "." + (item.ext || "jpg"));
 }
 
 function refreshNameUI(item){
@@ -717,17 +868,22 @@ function refreshNameUI(item){
 
 function setName(id,v){
   var item=getItem(id);if(!item) return;
-  item.name=v;item.syncName=false;
-  var fm=document.getElementById("fnm"+id);if(fm) fm.textContent=v;
-  var h=document.getElementById("fh"+id);if(h) h.textContent="Filename edited by hand (no longer follows the Title).";
+  // Keep the uploaded filename as the permanent key.
+  // User edits are intentionally not allowed to change the CSV mapping key.
+  var fm=document.getElementById("fnm"+id);
+  if(fm) fm.textContent=item.origName;
+  var fn=document.getElementById("fn"+id);
+  if(fn) fn.value=item.origName;
+  var h=document.getElementById("fh"+id);
+  if(h) h.textContent="Original filename is locked and is used to match this metadata in Adobe CSV.";
 }
 
 function saveRenamed(id){
   var item=getItem(id);if(!item) return;
   var a=document.createElement("a");
-  a.href=URL.createObjectURL(item.file);a.download=item.name;
+  a.href=URL.createObjectURL(item.file);a.download=item.origName;
   document.body.appendChild(a);a.click();a.remove();
-  banner("💾 Saved original file as "+escapeHTML(item.name)+". Upload this renamed file to Adobe Stock so it matches the CSV.","ok");
+  banner("💾 Original file saved as "+escapeHTML(item.origName)+". This is the filename used by the Adobe CSV.","ok");
 }
 
 function checkOne(id){
@@ -750,12 +906,70 @@ function runRisk(alertUser){
   if(alertUser&&!filesData.length) alert("Upload files first.");
 }
 
+
+
+function previewAdobeCSV(){
+  var body=document.getElementById("csvPreviewBody");
+  var summary=document.getElementById("csvPreviewSummary");
+  if(!body||!summary) return;
+  if(!filesData.length){
+    summary.innerHTML="⚠️ Upload files first.";
+    body.innerHTML='<div class="csvPreviewEmpty">No files available.</div>';
+    return;
+  }
+
+  var check=validateAdobeCSV(false);
+  var rows=filesData.map(function(item,i){
+    var fn=String(item.origName||item.name||"");
+    var title=String(item.title||"");
+    var kws=Array.isArray(item.keywords)?item.keywords.join(", "):"";
+    var cat=catName(item.category);
+    return "<tr>"+
+      "<td>"+(i+1)+"</td>"+
+      "<td>"+escapeHTML(fn)+"</td>"+
+      "<td>"+escapeHTML(title)+"</td>"+
+      "<td class=\"csvKw\">"+escapeHTML(kws)+"</td>"+
+      "<td>"+escapeHTML(cat)+"</td>"+
+    "</tr>";
+  }).join("");
+
+  body.innerHTML=
+    '<div class="csvPreviewWrap"><table class="csvPreviewTable">'+
+    '<thead><tr><th>#</th><th>Filename</th><th>Title</th><th>Keywords</th><th>Category</th></tr></thead>'+
+    '<tbody>'+rows+'</tbody></table></div>';
+
+  summary.innerHTML=(check.ok?"✅ <b>Preview ready.</b>":"⚠️ <b>Preview generated, but Validator found "+check.errors.length+" error(s).</b>")+
+    " This is the data that will be exported to the Adobe CSV.";
+}
+
+function openAdobeUploadedFiles(){
+  var a=document.getElementById("pfOriginal"),b=document.getElementById("pfCsv"),c=document.getElementById("pfUploaded");
+  if(!a.checked||!b.checked||!c.checked){
+    var missing=[];
+    if(!a.checked) missing.push("Original filenames confirmed");
+    if(!b.checked) missing.push("CSV Validator = Ready");
+    if(!c.checked) missing.push("Same original files uploaded to Adobe Stock");
+    alert("Before opening Adobe Contributor, confirm:\n\n• "+missing.join("\n• "));
+    return;
+  }
+  window.open("https://contributor.stock.adobe.com/uploads","_blank","noopener");
+}
+function showAdobeCSVSteps(){
+  var el=document.getElementById("adobeCSVSteps");
+  if(el) el.style.display=el.style.display==="none"?"block":"none";
+}
+
 /* =========================
    UI
 ========================= */
 var nextId=1;
 var batchTotal=0,batchDone=0;
 function banner(text,cls){var b=document.getElementById('banner');if(b){b.className='banner '+(cls||'');b.innerHTML=text;}}
+
+function checkAll(){
+  if(!filesData.length){alert('Upload files first.');return;}
+  filesData.forEach(function(it){checkOne(it.id);});
+}
 
 function analyzeAll(){
   if(!filesData.length){alert('Upload files first.');return;}
@@ -787,20 +1001,20 @@ function cardHTML(item){
     prev='<div class="preview"><div class="fileBox"><div class="fileIcon">📄</div><strong>'+escapeHTML(item.type.toUpperCase())+' FILE</strong><br><span>'+escapeHTML(item.name)+'</span><p class="warning">'+escapeHTML(item.previewNote||"Preview not available. Metadata still works.")+'</p></div></div>';
   }
   var statusCls=item.state==="ready"?"success":(item.state==="error"?"warning":"");
-  var statusTxt=item.state==="ready"?("✓ Metadata ready: "+item.keywords.length+" keywords"+(item.aiUsed==="gemini"?" (Gemini)":(item.aiUsed?" (AI + filename)":" (filename only)"))+(item.gemErr?" | Gemini failed: "+escapeHTML(item.gemErr):"")):(item.state==="error"?("Preview problem: "+escapeHTML(item.note||"")):"⏳ "+escapeHTML(item.stage||"Waiting..."));
+  var statusTxt=item.state==="error"?("Preview problem: "+escapeHTML(item.note||"")):(item.title||item.keywords.length?"✓ Metadata ready":"✓ Ready — paste Title and Keywords");
   var kw=item.keywords.map(function(k,i){return '<span class="keyword'+(i<RULES.priorityCount?" top":"")+'">'+escapeHTML(k)+"</span>";}).join("");
   return '<div class="cardTop"><span class="serial" id="sn'+item.id+'">#'+(getIndex(item.id)+1)+'</span><span class="badge">'+escapeHTML(item.type.toUpperCase())+'</span><span class="fname" id="fnm'+item.id+'">'+escapeHTML(item.name)+'</span></div>'+
   prev+
-  '<button class="dlBtn" onclick="downloadImage('+item.id+')">⬇ Download Image</button>'+
+  '<button class="dlBtn" onclick="copyImage('+item.id+')">📋 Copy Image</button>'+
   '<button class="simBtn" onclick="checkOne('+item.id+')">🔍 Similarity Check</button>'+
   '<div class="risk ok" id="risk'+item.id+'"><b>Similarity Risk:</b> tap the button above to check</div>'+
-  '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div><div class="counter">Both buttons save the image to Downloads and open the site. Upload the saved image there (SVG, EPS and AI: a PNG preview is saved).</div>'+
+  '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div>'+
   '<div class="status '+statusCls+'" id="st'+item.id+'">'+statusTxt+'</div>'+
-  '<div class="field"><label>Filename (same as Title)</label><input type="text" id="fn'+item.id+'" value="'+escapeHTML(item.name)+'" oninput="setName('+item.id+',this.value)"><div class="counter" id="fh'+item.id+'">'+(item.syncName?'Filename follows the Title automatically. Use Save Renamed File to get the file with this name.':'Filename edited by hand (no longer follows the Title).')+'</div></div>'+
-  '<div class="field"><label>Title</label><input type="text" id="ti'+item.id+'" value="'+escapeHTML(item.title)+'" oninput="setField('+item.id+',\'title\',this.value)"><div class="counter" id="tc'+item.id+'">'+item.title.length+' / '+RULES.titleMaxLength+'</div></div>'+
-  '<div class="field"><label>Keywords (first '+RULES.priorityCount+' = highest priority)</label><textarea id="kw'+item.id+'" oninput="updateKeywords('+item.id+',this.value)">'+escapeHTML(item.keywords.join(", "))+'</textarea><div class="counter" id="kc'+item.id+'">'+item.keywords.length+' / '+RULES.keywordCount+'</div><div class="keywords" id="kchips'+item.id+'">'+kw+'</div></div>'+
+  '<div class="field"><label>Original Filename (Metadata ID)</label><input type="text" id="fn'+item.id+'" value="'+escapeHTML(item.name)+'" readonly oninput="setName('+item.id+',this.value)"><div class="counter" id="fh'+item.id+'">'+(item.syncName?'Original filename is locked and will be used to match the Adobe CSV.':'Original filename is locked and will be used to match the Adobe CSV.')+'</div></div>'+
+  '<div class="field"><label>Title</label><input type="text" id="ti'+item.id+'" value="'+escapeHTML(item.title)+'" placeholder="Paste title here" oninput="setField('+item.id+',\'title\',this.value)"><div class="counter" id="tc'+item.id+'">'+item.title.length+' / '+RULES.titleMaxLength+'</div></div>'+
+  '<div class="field"><label>Keywords</label><textarea id="kw'+item.id+'" placeholder="Paste keywords, separated by commas" oninput="updateKeywords('+item.id+',this.value)">'+escapeHTML(item.keywords.join(", "))+'</textarea><div class="counter" id="kc'+item.id+'">'+item.keywords.length+' / '+RULES.keywordCount+'</div><div class="keywords" id="kchips'+item.id+'">'+kw+'</div></div>'+
   '<div class="field"><label>Adobe Category</label><select onchange="setField('+item.id+',\'category\',this.value)">'+categoryOptions(item.category)+'</select></div>'+
-  '<div class="row"><button onclick="copyOne('+item.id+')">Copy Metadata</button><button class="btn-light" onclick="saveRenamed('+item.id+')">💾 Save Renamed File</button><button class="btn-light" onclick="moveItem('+item.id+',-1)">▲ Up</button><button class="btn-light" onclick="moveItem('+item.id+',1)">▼ Down</button><button class="danger" onclick="removeOne('+item.id+')">Remove</button></div>';
+  '<div class="row"><button onclick="copyOne('+item.id+')">Copy Metadata</button><button class="btn-light" onclick="moveItem('+item.id+',-1)">▲ Up</button><button class="btn-light" onclick="moveItem('+item.id+',1)">▼ Down</button><button class="danger" onclick="removeOne('+item.id+')">Remove</button></div>';
 }
 
 function getItem(id){
@@ -834,7 +1048,7 @@ function paintCard(item){
 function setField(id,field,value){
   var item=getItem(id);if(!item) return;
   item[field]=value;
-  if(field==="title"&&item.syncName){item.name=makeFileName(item);refreshNameUI(item);}
+  if(field==="title"&&item.syncName){item.name=item.origName;refreshNameUI(item);}
   if(field==="title"){
     var c=document.getElementById("tc"+id);
     if(c) c.textContent=value.length+" / "+RULES.titleMaxLength;
@@ -890,7 +1104,7 @@ function clearAll(){
   if(!confirm("Remove all files?")) return;
   filesData.length=0;queue.length=0;
   document.getElementById("results").innerHTML="";
-  banner("Upload files to begin. Analysis starts automatically.");
+  banner("Upload files. Paste Title and Keywords.");
 }
 
 /* =========================
@@ -898,22 +1112,25 @@ function clearAll(){
 ========================= */
 document.getElementById("fileInput").addEventListener("change",function(e){
   var list=Array.from(e.target.files);
-  if(!processing&&!queue.length){batchTotal=0;batchDone=0;}
-  batchTotal+=list.length;
   list.forEach(function(file){
     var ext=file.name.split(".").pop().toLowerCase();
     var type=ext==="jpeg"?"jpg":ext;
     var item={
-      id:nextId++,file:file,name:file.name,origName:file.name,ext:ext,syncName:true,type:type,
-      title:"",keywords:[],category:(type==="jpg"||type==="png")?8:8,
-      state:"queued",stage:"Waiting in queue...",previewEl:null,previewUrl:null,canvas:null,aiUsed:false
+      id:nextId++,file:file,name:file.name,origName:file.name,sourceFilename:file.name,ext:ext,syncName:false,type:type,
+      title:"",keywords:[],category:8,state:"ready",stage:"",previewEl:null,previewUrl:null,canvas:null,aiUsed:false
     };
+    if(type==="jpg"||type==="png"||type==="svg"){
+      item.previewEl="img";
+      item.previewUrl=URL.createObjectURL(file);
+    }else{
+      item.previewEl=null;
+      item.previewNote="Preview available after AI Analyze.";
+    }
     filesData.push(item);
     paintCard(item);
-    queue.push(item.id);
   });
   e.target.value="";
-  runQueue();
+  banner(filesData.length+" file(s) ready. Paste Title and Keywords.","ok");
 });
 
 var renderChain=Promise.resolve();
@@ -931,7 +1148,7 @@ async function worker(){
     catch(err){
       item.state="error";item.note=err.message;
       var m=buildMetadata(item.name,item.type,[]);
-      item.title=m.title;item.keywords=m.keywords;item.syncName=true;item.name=makeFileName(item);
+      item.title=m.title;item.keywords=m.keywords;item.syncName=false;item.name=item.origName;
       paintCard(item);
     }
     batchDone++;
@@ -1033,7 +1250,7 @@ async function processItem(item){
   item.title=meta.title;
   item.keywords=meta.keywords;
   item.syncName=true;
-  item.name=makeFileName(item);
+  item.name=item.origName;
   item.state="ready";
   saveHistory(item);
   paintCard(item);
@@ -1061,22 +1278,133 @@ function copyAll(){
   });
   clipboardWrite(out,"All metadata copied!");
 }
-function downloadCSV(){
-  if(!filesData.length){alert("Upload files first.");return;}
+
+function buildAdobeCSVText(){
   var csv="Filename,Title,Keywords,Category,Releases\n";
   filesData.forEach(function(item){
-    var row=[item.name,item.title,item.keywords.join(", "),catName(item.category),""].map(function(v){
+    var row=[item.origName||item.name,item.title,item.keywords.join(", "),catName(item.category),""].map(function(v){
       return '"'+String(v).replace(/"/g,'""')+'"';
     }).join(",");
     csv+=row+"\n";
   });
+  return csv;
+}
+
+function validateAdobeCSV(showUI){
+  var errors=[], warnings=[], checked=0;
+  if(!filesData.length){
+    errors.push("কোনো file upload করা হয়নি।");
+  }
+
+  var seen={};
+  filesData.forEach(function(item,idx){
+    checked++;
+    var fn=String(item.origName||item.name||"").trim();
+    var title=String(item.title||"").trim();
+    var kws=Array.isArray(item.keywords)?item.keywords.filter(function(k){return String(k).trim();}):[];
+
+    if(!fn) errors.push("#"+(idx+1)+": Original filename নেই।");
+    if(fn.length>30) errors.push("#"+(idx+1)+" "+fn+": filename "+fn.length+" characters — 30-এর বেশি।");
+    if(fn.length>0){
+      var key=fn.toLowerCase();
+      if(seen[key]) errors.push("#"+(idx+1)+" "+fn+": duplicate filename — "+seen[key]+" নম্বর file-এর সঙ্গে মিলে গেছে।");
+      else seen[key]=idx+1;
+    }
+
+    if(!title) errors.push("#"+(idx+1)+" "+(fn||"file")+": Title খালি।");
+    if(title.length>70) errors.push("#"+(idx+1)+" "+fn+": Title "+title.length+" characters — 70-এর বেশি।");
+
+    if(kws.length>50) errors.push("#"+(idx+1)+" "+fn+": "+kws.length+" keywords — 50-এর বেশি।");
+    if(kws.length===0) errors.push("#"+(idx+1)+" "+fn+": Keywords খালি।");
+
+    var lower={};
+    kws.forEach(function(k){
+      var v=String(k).trim().toLowerCase();
+      if(lower[v]) warnings.push("#"+(idx+1)+" "+fn+": duplicate keyword '"+String(k).trim()+"'.");
+      lower[v]=true;
+    });
+
+    if(kws.length>0 && kws.length<10) warnings.push("#"+(idx+1)+" "+fn+": মাত্র "+kws.length+" keywords আছে; আপনার workflow-এর প্রথম 10 priority keywords সম্পূর্ণ হয়নি।");
+    if(kws.slice(0,10).some(function(k){return !String(k).trim();})) warnings.push("#"+(idx+1)+" "+fn+": প্রথম 10 keyword-এর মধ্যে খালি keyword আছে।");
+  });
+
+  var csv=buildAdobeCSVText();
+  var bytes=new Blob([csv]).size;
+  if(bytes>1024*1024) errors.push("CSV size "+(bytes/1024/1024).toFixed(2)+" MB — 1 MB-এর বেশি।");
+
+  var ok=errors.length===0;
+  if(showUI){
+    var sum=document.getElementById("validatorSummary");
+    var det=document.getElementById("validatorDetails");
+    var readyBox=document.getElementById("adobeCsvReady");
+    if(readyBox){ readyBox.className="adobeReady"+(ok?" show":""); }
+    if(sum){
+      sum.className="validatorSummary "+(ok?"validatorGood":"validatorBad");
+      sum.innerHTML=ok
+        ? "✅ <b>CSV Ready:</b> "+checked+"টি file validation pass করেছে। Adobe CSV download করা যাবে।"
+        : "❌ <b>CSV Ready নয়:</b> "+errors.length+"টি error ঠিক করতে হবে"+(warnings.length?" এবং "+warnings.length+"টি warning আছে।":"");
+    }
+    if(det){
+      var h="";
+      if(errors.length) h+='<div class="validatorBad"><b>Errors</b><ul class="validatorList">'+errors.map(function(e){return "<li>"+escapeHTML(e)+"</li>";}).join("")+"</ul></div>";
+      if(warnings.length) h+='<div class="validatorWarn"><b>Warnings</b><ul class="validatorList">'+warnings.map(function(e){return "<li>"+escapeHTML(e)+"</li>";}).join("")+"</ul></div>";
+      if(ok&&!warnings.length) h='<div class="validatorGood" style="margin-top:10px">🎉 কোনো error বা warning পাওয়া যায়নি।</div>';
+      det.innerHTML=h;
+    }
+  }
+  return {ok:ok,errors:errors,warnings:warnings,bytes:bytes};
+}
+
+function downloadCSV(){
+  if(!filesData.length){alert("Upload files first.");return;}
+  var check=validateAdobeCSV(true);
+  if(!check.ok){
+    banner("❌ Adobe CSV তৈরি বন্ধ রাখা হয়েছে। Validator-এর errors আগে ঠিক করুন.","warning");
+    alert("CSV download করা হয়নি। Adobe CSV Validator-এর errors আগে ঠিক করুন.");
+    return;
+  }
+  var csv=buildAdobeCSVText();
   var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
+  var url=URL.createObjectURL(blob);
+  a.href=url;
   a.download="Adobe_Stock_Metadata.csv";
   document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  banner("✅ Adobe CSV validated and downloaded successfully.","ok");
 }
 gemUI();
+updateGoogleAISelectedFile();
+
+
+function getSelectedMetadataItem(){
+  return filesData.length ? filesData[filesData.length-1] : null;
+}
+function updateGoogleAISelectedFile(){}
+function extractAIMetadata(){
+  var raw=(document.getElementById("aiPasteBox")||{}).value||"";
+  var st=document.getElementById("aiPasteStatus");
+  var item=getSelectedMetadataItem();
+  if(!raw.trim()){st.className="aiPasteStatus warn";st.textContent="Paste the Google AI result first.";return;}
+  if(!item){st.className="aiPasteStatus warn";st.textContent="Upload a file first.";return;}
+  var titleMatch=raw.match(/(?:^|\n)\s*TITLE\s*[:\-]\s*(.+?)(?=\n\s*KEYWORDS\s*[:\-]|$)/is);
+  var kwMatch=raw.match(/(?:^|\n)\s*KEYWORDS\s*[:\-]\s*([\s\S]*)/i);
+  var title=titleMatch?titleMatch[1].trim():"";
+  var kwText=kwMatch?kwMatch[1].trim():"";
+  var keywords=kwText.replace(/```[a-z]*|```/gi,"").replace(/\r?\n/g," ").split(/[,;|]/).map(function(k){return k.replace(/^[-*\d.\s]+/,"").trim();}).filter(Boolean);
+  var seen={};
+  keywords=keywords.filter(function(k){var key=k.toLowerCase();if(seen[key])return false;seen[key]=1;return true;});
+  if(title) item.title=title.slice(0,RULES.titleMaxLength);
+  if(keywords.length) item.keywords=keywords.slice(0,RULES.keywordCount);
+  item.aiUsed="google-ai-mode";
+  paintCard(item);
+  st.className=keywords.length>=RULES.keywordCount?"aiPasteStatus ok":"aiPasteStatus warn";
+  st.textContent=(title?"Title applied. ":"Title not found. ")+(keywords.length?keywords.length+" keywords applied.":"Keywords not found.");
+}
+function clearAIPaste(){
+  var box=document.getElementById("aiPasteBox"); if(box) box.value="";
+  var st=document.getElementById("aiPasteStatus"); if(st){st.className="aiPasteStatus";st.textContent="Paste Google AI result here.";}
+}
 </script>
 </body>
 </html>
