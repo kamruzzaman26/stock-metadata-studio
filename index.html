@@ -36,6 +36,7 @@ input[type=file]{display:none}
 .linkRow{display:flex;gap:8px;margin-top:12px;align-items:stretch}
 .linkRow input[type=text]{flex:1;min-width:0;padding:10px 12px;font-size:13px;border-radius:12px}
 .smallBtn{flex:none;padding:10px 14px;font-size:13px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#14b8a6);box-shadow:0 4px 12px rgba(20,184,166,.3)}
+.dlBtn{display:block;width:100%;margin-top:12px;padding:13px;font-size:15px;border-radius:14px;background:linear-gradient(135deg,#0f766e,#14b8a6);box-shadow:0 6px 16px rgba(20,184,166,.3)}
 .simBtn{display:block;width:100%;margin-top:14px;padding:17px;font-size:17px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 8px 20px rgba(124,58,237,.35)}
 .serial{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:13px;font-weight:800;min-width:38px;text-align:center;padding:5px 10px;border-radius:999px;flex:none}
 .badge{background:#172033;color:#fff;font-size:11px;font-weight:800;letter-spacing:.8px;padding:5px 10px;border-radius:999px;flex:none}
@@ -538,67 +539,16 @@ function computeRisk(idx){
   return {cls:cls,msg:parts.join(" ")};
 }
 
-async function postJson(url,fd){
-  var ctl=new AbortController();
-  var t=setTimeout(function(){ctl.abort();},45000);
-  try{return await fetch(url,{method:"POST",body:fd,signal:ctl.signal});}
-  finally{clearTimeout(t);}
-}
-async function uploadTmpfiles(f){
-  var fd=new FormData();fd.append("file",f);
-  var r=await postJson("https://tmpfiles.org/api/v1/upload",fd);
-  var j=await r.json();
-  return j.data.url.replace("tmpfiles.org/","tmpfiles.org/dl/");
-}
-async function uploadUguu(f){
-  var fd=new FormData();fd.append("files[]",f);
-  var r=await postJson("https://uguu.se/upload",fd);
-  var j=await r.json();
-  return j.files[0].url;
-}
-async function uploadLitter(f){
-  var fd=new FormData();fd.append("reqtype","fileupload");fd.append("time","72h");fd.append("fileToUpload",f);
-  var r=await postJson("https://litterbox.catbox.moe/resources/internals/api.php",fd);
-  var t=(await r.text()).trim();
-  if(!/^https?:\/\//.test(t)) throw new Error("bad reply");
-  return t;
-}
-
-async function copyLink(id){
+async function downloadImage(id){
   var item=getItem(id);if(!item) return;
-  var btn=document.getElementById("lb"+id),box=document.getElementById("lk"+id);
-  if(!btn||!box) return;
   var src=await getSearchFile(item);
-  if(!src){box.value="";box.placeholder="No preview image for this file";return;}
-  var ext=src.type==="image/png"?"png":"jpg";
-  var f=new File([src],"stock"+id+"-"+Date.now()+"."+ext,{type:src.type});
-  /* download the image first so it can be uploaded to TinEye by hand */
+  if(!src){banner("No preview image for this file. Export a PNG or JPG preview first.","");return;}
   var isRaster=(item.type==="jpg"||item.type==="png");
-  var dlName=isRaster?item.name:item.name.replace(/\.[^.]+$/,"")+"-preview.png";
-  var dl=document.createElement("a");
-  dl.href=URL.createObjectURL(src);dl.download=dlName;
-  document.body.appendChild(dl);dl.click();dl.remove();
-  banner("⬇️ Image saved to Downloads as "+escapeHTML(dlName)+". Open tineye.com, tap Upload and choose it.","ok");
-  btn.disabled=true;btn.textContent="⏳ Uploading...";
-  var url="";
-  var hosts=[["uguu.se",uploadUguu],["litterbox.catbox.moe",uploadLitter],["tmpfiles.org",uploadTmpfiles]];
-  var hostName="";
-  for(var i=0;i<hosts.length&&!url;i++){
-    try{url=await hosts[i][1](f);hostName=hosts[i][0];}catch(e){url="";}
-  }
-  btn.disabled=false;
-  if(!url){
-    btn.textContent="🔗 Copy Link + Download";
-    box.value="";box.placeholder="Upload failed. Try again, or use the Download/TinEye upload way.";
-    return;
-  }
-  item.shareUrl=url;item.shareHost=hostName;box.value=url;
-  var lh=document.getElementById("lh"+id);if(lh) lh.textContent="Host: "+hostName;
-  var ok=false;
-  try{await navigator.clipboard.writeText(url);ok=true;}catch(e){}
-  if(!ok){box.focus();box.select();}
-  btn.textContent=ok?"✅ Copied":"Select & copy";
-  setTimeout(function(){btn.textContent="🔗 Copy Link + Download";},3000);
+  var name=isRaster?item.name:item.name.replace(/\.[^.]+$/,"")+"-preview.png";
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(src);a.download=name;
+  document.body.appendChild(a);a.click();a.remove();
+  banner("⬇️ Saved to Downloads as "+escapeHTML(name)+". Open tineye.com, tap Upload and choose it.","ok");
 }
 
 function canvasToFile(c){
@@ -717,7 +667,7 @@ function cardHTML(item){
   var kw=item.keywords.map(function(k,i){return '<span class="keyword'+(i<RULES.priorityCount?" top":"")+'">'+escapeHTML(k)+"</span>";}).join("");
   return '<div class="cardTop"><span class="serial" id="sn'+item.id+'">#'+(getIndex(item.id)+1)+'</span><span class="badge">'+escapeHTML(item.type.toUpperCase())+'</span><span class="fname">'+escapeHTML(item.name)+'</span></div>'+
   prev+
-  '<div class="linkRow"><input type="text" readonly id="lk'+item.id+'" placeholder="Image link appears here" value="'+escapeHTML(item.shareUrl||'')+'"><button class="smallBtn" id="lb'+item.id+'" onclick="copyLink('+item.id+')">🔗 Copy Link + Download</button></div><div class="counter" id="lh'+item.id+'">'+(item.shareHost?'Host: '+escapeHTML(item.shareHost):'')+'</div>'+
+  '<button class="dlBtn" onclick="downloadImage('+item.id+')">⬇ Download Image</button>'+
   '<button class="simBtn" onclick="checkOne('+item.id+')">🔍 Similarity Check</button>'+
   '<div class="risk ok" id="risk'+item.id+'"><b>Similarity Risk:</b> tap the button above to check</div>'+
   '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div><div class="counter">Google Lens: file is sent automatically. TinEye blocks automatic upload, so it opens tineye.com and you pick the file (SVG, EPS and AI: a PNG preview is saved to Downloads first).</div>'+
