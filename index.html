@@ -165,8 +165,8 @@ car:["vehicle","transport","automobile","drive","road","traffic","transportation
 house:["home","building","architecture","property","real","estate","residential"]
 };
 
-var vectorPool = ["illustration","graphic","isolated","minimal","clean","modern","artwork","creative","decorative","element","shape","simple","scalable","editable","flat","template","symbol","concept","print","branding","web","poster","background","visual","commercial","abstract","outline","silhouette","line","digital"];
-var photoPool = ["photography","high","quality","closeup","detail","composition","natural","background","texture","color","bright","outdoor","indoor","creative","concept","design","modern","clean","simple","isolated","professional","commercial","editorial","fresh","still","scene","style","art","visual","backdrop"];
+var vectorPool = ["vector"];
+var photoPool = ["photography"];
 
 var categories = [[1,"Animals"],[2,"Buildings and Architecture"],[3,"Business"],[4,"Drinks"],[5,"The Environment"],[6,"States of Mind"],[7,"Food"],[8,"Graphic Resources"],[9,"Hobbies and Leisure"],[10,"Industry"],[11,"Landscapes"],[12,"Lifestyle"],[13,"People"],[14,"Plants and Flowers"],[15,"Culture and Religion"],[16,"Science"],[17,"Social Issues"],[18,"Sports"],[19,"Technology"],[20,"Transport"],[21,"Travel"]];
 
@@ -228,7 +228,7 @@ function loadModel(){
 /* =========================
    GEMINI
 ========================= */
-var GEM_DEFAULT_MODEL="gemini-3.8-flash";
+var GEM_DEFAULT_MODEL="gemini-1.5-flash";
 function gemGet(k){try{return localStorage.getItem(k)||"";}catch(e){return "";}}
 function gemKey(){return gemGet("sms_gem_key").trim();}
 function gemModel(){return (gemGet("sms_gem_model2").trim()||GEM_DEFAULT_MODEL);}
@@ -264,57 +264,73 @@ function canvasToJpegB64(c,maxSide){
   x.drawImage(c,0,0,t.width,t.height);
   return t.toDataURL("image/jpeg",0.8).split(",")[1];
 }
-async function geminiAnalyze(canvas,item){
-  var key=gemKey();
-  var isVector=(item.type==="svg"||item.type==="eps"||item.type==="ai");
-  var catList=categories.map(function(c){return c[0]+"="+c[1];}).join(", ");
-  var prompt="You are an expert Adobe Stock metadata writer. Look at the image and return JSON only.\n"+
-   "Rules:\n- title: accurate, descriptive, natural English, max "+RULES.titleMaxLength+" characters, describe only what is visible"+(isVector?", it is a vector illustration":"")+". No brand names, no artist names.\n"+
-   "- keywords: exactly "+RULES.keywordCount+" single or two-word English keywords, ordered by importance (the first "+RULES.priorityCount+" must be the most relevant and searchable). Only relevant words, no duplicates, no filler like beautiful or nice, no brand names.\n"+
-   "- category: the best matching number from: "+catList+".\n"+
-   "Return exactly: {\"title\":\"...\",\"keywords\":[\"...\"],\"category\":8}";
-  var body={
-    contents:[{parts:[{text:prompt},{inline_data:{mime_type:"image/jpeg",data:canvasToJpegB64(canvas,768)}}]}],
-    generationConfig:{responseMimeType:"application/json",temperature:0.3,maxOutputTokens:2048,thinkingConfig:{thinkingBudget:0}}
-  };
-  var url="https://generativelanguage.googleapis.com/v1beta/models/"+encodeURIComponent(gemModel())+":generateContent";
-  var resp=null,tries=0,noThink=false;
-  while(tries<4){
-    resp=await fetch(url,{method:"POST",headers:{"Content-Type":"application/json","x-goog-api-key":key},body:JSON.stringify(body)});
-    if(resp.status===400&&!noThink){
-      noThink=true;
-      delete body.generationConfig.thinkingConfig;
-      continue;
+async function geminiAnalyze(canvas, item) {
+  var key = gemKey();
+  var catList = categories.map(function(c) { return c[0] + "=" + c[1]; }).join(", ");
+
+  var prompt = "You are an expert Adobe Stock metadata writer. Analyze ONLY what is visibly present in the artwork. Return JSON only.\n" +
+   "TITLE: Write a natural, specific, subject-first title. Mention the main visible subject, then distinctive visible style, composition, pattern, or elements. Do not keyword-stuff.\n" +
+   "KEYWORDS: Return exactly " + RULES.keywordCount + " English keywords, ordered from most important to least important. The first " + RULES.priorityCount + " must be the strongest search terms. Use 1-2 word keywords.\n" +
+   "CATEGORY: Choose the best matching number from: " + catList + ".\n" +
+   "Return JSON format: {\"title\":\"...\",\"keywords\":[\"...\"],\"category\":8}";
+
+  var body = {
+    contents: [{
+      parts: [
+        { text: prompt },
+        { inline_data: { mime_type: "image/jpeg", data: canvasToJpegB64(canvas, 768) } }
+      ]
+    }],
+    generationConfig: {
+      responseMimeType: "application/json",
+      temperature: 0.2,
+      maxOutputTokens: 2048
     }
-    if(resp.status===429||resp.status===503||resp.status===500){
+  };
+
+  var url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(gemModel()) + ":generateContent";
+  var resp = null, tries = 0;
+
+  while (tries < 3) {
+    resp = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify(body)
+    });
+
+    if (resp.status === 429 || resp.status === 503 || resp.status === 500) {
       tries++;
-      if(tries>=4) break;
-      var wait=(resp.status===429?6000:3000)*tries;
-      stage(item,"Gemini busy, retry "+tries+"/3 in "+Math.round(wait/1000)+"s...");
+      if (tries >= 3) break;
+      var wait = 3000 * tries;
+      stage(item, "Gemini busy, retrying in " + (wait / 1000) + "s...");
       await sleep(wait);
       continue;
     }
     break;
   }
-  if(!resp.ok){
-    var msg="";
-    try{var j=await resp.json();msg=(j.error&&j.error.message)||"";}catch(e){}
-    throw new Error("Gemini "+resp.status+(msg?": "+msg.slice(0,400):""));
-  }
-  var data=await resp.json();
-  var txt="";
-  try{txt=data.candidates[0].content.parts.map(function(p){return p.text||"";}).join("");}catch(e){}
-  txt=txt.replace(/```json|```/g,"").trim();
-  var out=JSON.parse(txt);
-  var kws=[];
-  (out.keywords||[]).forEach(function(k){addUnique(kws,String(k));});
-  var title=String(out.title||"").replace(/\s+/g," ").trim().slice(0,RULES.titleMaxLength);
-  if(!title||kws.length<5) throw new Error("Gemini gave an incomplete answer");
-  var cat=parseInt(out.category,10);
-  if(!(cat>=1&&cat<=21)) cat=8;
-  return {title:title,keywords:kws,category:cat};
-}
 
+  if (!resp.ok) {
+    var msg = "";
+    try { var j = await resp.json(); msg = (j.error && j.error.message) || ""; } catch (e) {}
+    throw new Error("Gemini " + resp.status + (msg ? ": " + msg.slice(0, 200) : ""));
+  }
+
+  var data = await resp.json();
+  var txt = "";
+  try { txt = data.candidates[0].content.parts[0].text; } catch (e) {}
+  txt = txt.replace(/```json|```/g, "").trim();
+  var out = JSON.parse(txt);
+
+  var kws = [];
+  (out.keywords || []).forEach(function(k) { addUnique(kws, String(k)); });
+  var title = String(out.title || "").replace(/\s+/g, " ").trim().slice(0, RULES.titleMaxLength);
+  if (!title || kws.length < 5) throw new Error("Gemini gave an incomplete answer");
+
+  var cat = parseInt(out.category, 10);
+  if (!(cat >= 1 && cat <= 21)) cat = 8;
+
+  return { title: title, keywords: kws, category: cat };
+}
 async function classify(canvas){
   var m=await loadModel();
   if(!m||!canvas) return [];
@@ -496,11 +512,13 @@ async function renderEPS(file,item){
 /* =========================
    METADATA ENGINE
 ========================= */
+var genericKeywords = new Set(["beautiful","creative","design","artwork","illustration","graphic","visual","commercial","element","simple","clean","modern","digital","background","concept","branding","template","print","web","poster","scalable","editable","decorative","minimal","abstract","image","picture","stock","content"]);
 function addUnique(list,word){
   if(!word) return;
-  word=word.toLowerCase().trim();
+  word=word.toLowerCase().trim().replace(/\\s+/g," ");
   if(!/^[a-z][a-z ]*$/.test(word)||word.length<3) return;
-  if(bannedKeywords.has(word)||stopWords.has(word)) return;
+  if(word.split(" ").length>2) return;
+  if(bannedKeywords.has(word)||stopWords.has(word)||genericKeywords.has(word)) return;
   if(list.indexOf(word)!==-1) return;
   if(list.indexOf(word+"s")!==-1||list.indexOf(word.replace(/s$/,""))!==-1) return;
   list.push(word);
@@ -560,8 +578,8 @@ function buildMetadata(name,type,labels){
   if(fileTitle&&labs[0]&&fileWords.indexOf(labs[0].split(" ")[0])===-1&&!isVector){main=fileTitle+" "+subj;}
   var title;
   if(isVector){
-    var extra=keywords.filter(function(k){return k!=="vector"&&k!=="illustration"&&main.toLowerCase().indexOf(k)===-1;}).slice(0,3);
-    title=main+" Vector Illustration, "+extra.join(", ")+" Design";
+    var extra=keywords.filter(function(k){return k!=="vector"&&main.toLowerCase().indexOf(k)===-1;}).slice(0,3);
+    title=main+(extra.length?", "+extra.join(", "):"");
   }else{
     var ex=keywords.filter(function(k){return main.toLowerCase().indexOf(k)===-1;}).slice(0,3);
     title=main+", "+ex.join(", ");
@@ -1004,8 +1022,10 @@ async function processItem(item){
   stage(item,"Building title and keywords...");
   var meta=buildMetadata(item.name,item.type,labels);
   if(gem){
-    var kws=gem.keywords.slice(0,RULES.keywordCount);
-    meta.keywords.forEach(function(w){if(kws.length<RULES.keywordCount) addUnique(kws,w);});
+    var kws=[];
+    (gem.keywords||[]).forEach(function(w){
+      if(kws.length<RULES.keywordCount) addUnique(kws,w);
+    });
     meta.title=gem.title;
     meta.keywords=kws.slice(0,RULES.keywordCount);
     item.category=gem.category;
