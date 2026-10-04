@@ -16,7 +16,7 @@ body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-g
 .toolbar{display:flex;flex-wrap:wrap;gap:10px}
 .mainActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,auto));gap:10px;margin-top:12px}
 .mainActions button{width:100%;min-height:54px}
-@media(max-width:650px){.mainActions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mainActions button{min-height:50px;padding:11px 8px;font-size:14px}}
+@media(max-width:650px){.mainActions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mainActions button{min-height:50px;padding:11px 6px;font-size:12px}}
 button,.uploadBtn{border:0;border-radius:14px;padding:13px 18px;font-weight:700;cursor:pointer;font-size:15px;color:#fff;font-family:inherit;transition:transform .12s,box-shadow .12s}
 button:active,.uploadBtn:active{transform:scale(.97)}
 .uploadBtn{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 6px 16px rgba(37,99,235,.35);font-size:17px;padding:16px}
@@ -39,7 +39,7 @@ input[type=file]{display:none}
 .linkRow{display:flex;gap:8px;margin-top:12px;align-items:stretch}
 .linkRow input[type=text]{flex:1;min-width:0;padding:10px 12px;font-size:13px;border-radius:12px}
 .smallBtn{flex:none;padding:10px 14px;font-size:13px;border-radius:12px;background:linear-gradient(135deg,#0f766e,#14b8a6);box-shadow:0 4px 12px rgba(20,184,166,.3)}
-.dlBtn{display:block;width:100%;margin-top:12px;padding:13px;font-size:15px;border-radius:14px;background:linear-gradient(135deg,#0f766e,#14b8a6);box-shadow:0 6px 16px rgba(20,184,166,.3);transition:transform .15s ease,background .15s ease,box-shadow .15s ease}.dlBtn.copied{background:linear-gradient(135deg,#15803d,#22c55e)!important;box-shadow:0 6px 16px rgba(34,197,94,.32);transform:scale(1.01)}.dlBtn:disabled{opacity:.82;cursor:wait}
+.dlBtn{display:block;width:100%;margin-top:12px;padding:13px;font-size:15px;border-radius:14px;background:linear-gradient(135deg,#0f766e,#14b8a6);box-shadow:0 6px 16px rgba(20,184,166,.3);transition:all .18s ease}.dlBtn.copied{background:linear-gradient(135deg,#15803d,#22c55e);box-shadow:0 6px 16px rgba(34,197,94,.3);transform:scale(.99)}
 .simBtn{display:block;width:100%;margin-top:14px;padding:17px;font-size:17px;border-radius:16px;background:linear-gradient(135deg,#7c3aed,#db2777);box-shadow:0 8px 20px rgba(124,58,237,.35)}
 .serial{background:linear-gradient(135deg,#2563eb,#4f46e5);color:#fff;font-size:13px;font-weight:800;min-width:38px;text-align:center;padding:5px 10px;border-radius:999px;flex:none}
 .badge{background:#172033;color:#fff;font-size:11px;font-weight:800;letter-spacing:.8px;padding:5px 10px;border-radius:999px;flex:none}
@@ -195,17 +195,8 @@ textarea{min-height:86px;resize:vertical}
   <label style="display:block;margin:7px 0"><input type="checkbox" id="pfCsv"> Adobe CSV Validator shows <b>CSV Ready</b> with no errors.</label>
   <label style="display:block;margin:7px 0"><input type="checkbox" id="pfUploaded"> The same original files have already been uploaded in Adobe Stock → Uploaded Files → New.</label>
   <div class="row">
+    <button type="button" class="btn-green" id="adobeCsvDownloadBtn" onclick="downloadCSV(); return false;">⬇️ Adobe CSV Download</button>
     <button class="btn-green" onclick="openAdobeUploadedFiles()">🚀 Open Adobe Uploaded Files</button>
-    <button class="btn-slate" onclick="showAdobeCSVSteps()">📖 Exact Upload CSV Steps</button>
-  </div>
-  <div id="adobeCSVSteps" style="display:none;margin-top:10px;padding:12px;border-radius:12px;background:#fff;border:1px solid #dbe4f0;font-size:13px;line-height:1.65">
-    <b>Adobe Stock → Upload CSV</b><br>
-    1️⃣ Open <b>Uploaded Files</b>.<br>
-    2️⃣ Select the <b>New</b> tab to see your recently uploaded files.<br>
-    3️⃣ Click <b>Upload CSV</b>.<br>
-    4️⃣ Click <b>Choose CSV file</b> and select the CSV downloaded from this website.<br>
-    5️⃣ After upload, click <b>Refresh</b> and verify the titles, keywords and categories.<br>
-    <small>Adobe requires the CSV filenames to match the uploaded asset filenames exactly, including extension and capitalization.</small>
   </div>
 </div>
 
@@ -220,6 +211,8 @@ var RULES = {
   keywordCount: 30,
   priorityCount: 10,
   titleMaxLength: 200,
+  titleMinWords: 15,
+  titleMaxWords: 25,
   similarityWarn: 0.6,
   similarityHigh: 0.8
 };
@@ -254,8 +247,8 @@ car:["vehicle","transport","automobile","drive","road","traffic","transportation
 house:["home","building","architecture","property","real","estate","residential"]
 };
 
-var vectorPool = ["vector"];
-var photoPool = ["photography"];
+var vectorPool = [];
+var photoPool = [];
 
 var categories = [[1,"Animals"],[2,"Buildings and Architecture"],[3,"Business"],[4,"Drinks"],[5,"The Environment"],[6,"States of Mind"],[7,"Food"],[8,"Graphic Resources"],[9,"Hobbies and Leisure"],[10,"Industry"],[11,"Landscapes"],[12,"Lifestyle"],[13,"People"],[14,"Plants and Flowers"],[15,"Culture and Religion"],[16,"Science"],[17,"Social Issues"],[18,"Sports"],[19,"Technology"],[20,"Transport"],[21,"Travel"]];
 
@@ -357,9 +350,9 @@ async function geminiAnalyze(canvas, item) {
   var key = gemKey();
   var catList = categories.map(function(c) { return c[0] + "=" + c[1]; }).join(", ");
 
-  var prompt = "You are an expert Adobe Stock metadata writer. Analyze ONLY what is visibly present in the artwork. Return JSON only.\n" +
-   "TITLE: Write a natural, specific, subject-first title. Mention the main visible subject, then distinctive visible style, composition, pattern, or elements. Do not keyword-stuff.\n" +
-   "KEYWORDS: Return exactly " + RULES.keywordCount + " English keywords, ordered from most important to least important. The first " + RULES.priorityCount + " must be the strongest search terms. Use 1-2 word keywords.\n" +
+  var prompt = "You are an expert Adobe Stock metadata writer. Analyze ONLY what is visibly present in the artwork. Follow current Adobe Stock metadata rules. Return JSON only.\n" +
+   "TITLE: Write ONE clear, natural, accurate, buyer-friendly title of 15 to 25 words AND 200 characters or fewer. Describe the main visible subject and important visible context. Do not use commas, hashtags, keyword stuffing, file names, file extensions, technical parameters, camera/gear terms, artist names, real people, fictional characters, brands, trademarks, copyrighted works, or claims not visible in the artwork. Do not use the words vector, photo, image, stock, design, illustration unless they are genuinely the subject.\n" +
+   "KEYWORDS: Return EXACTLY " + RULES.keywordCount + " English single-word keywords, ordered by importance. The first " + RULES.priorityCount + " must be the strongest and most specific search terms. Include the important words/concepts from the title in the top 10 when they accurately describe the artwork. Use specific nouns, adjectives, concepts, setting, subject, action, and relevant visual context. Use single words only. Never use two-word phrases. No duplicate keywords. No irrelevant/generic filler, file information, file extensions, camera/technical metadata, brands, trademarks, artist names, real people, fictional characters, or copyrighted-work references. Use one language only.\n" +
    "CATEGORY: Choose the best matching number from: " + catList + ".\n" +
    "Return JSON format: {\"title\":\"...\",\"keywords\":[\"...\"],\"category\":8}";
 
@@ -412,8 +405,8 @@ async function geminiAnalyze(canvas, item) {
 
   var kws = [];
   (out.keywords || []).forEach(function(k) { addUnique(kws, String(k)); });
-  var title = String(out.title || "").replace(/\s+/g, " ").trim().slice(0, RULES.titleMaxLength);
-  if (!title || kws.length < 5) throw new Error("Gemini gave an incomplete answer");
+  var title = String(out.title || "").replace(/\s+/g, " ").replace(/[,;|]/g, " ").replace(/[^A-Za-z0-9 ]/g, "").replace(/\s+/g, " ").trim().slice(0, RULES.titleMaxLength);
+  if (!title || kws.length !== RULES.keywordCount) throw new Error("Gemini must return a 15-25 word title and exactly " + RULES.keywordCount + " single-word keywords");
 
   var cat = parseInt(out.category, 10);
   if (!(cat >= 1 && cat <= 21)) cat = 8;
@@ -624,6 +617,54 @@ function labelWords(labels){
   return out;
 }
 
+function adobeCleanTitle(title){
+  return String(title||"")
+    .replace(/[,;|]/g," ")
+    .replace(/[^A-Za-z0-9 ]/g,"")
+    .replace(/\s+/g," ")
+    .trim()
+    .slice(0,RULES.titleMaxLength)
+    .trim();
+}
+
+function adobeNormalizeKeywords(list,title){
+  var candidates=[];
+  var seen={};
+  function collect(raw){
+    String(raw||"").split(/[^a-zA-Z0-9]+/).forEach(function(part){
+      var k=String(part||"").toLowerCase().trim();
+      if(!k || k.length<2 || k.length>40) return;
+      if(bannedKeywords.has(k)||stopWords.has(k)||genericKeywords.has(k)) return;
+      if(/^(jpg|jpeg|png|svg|eps|ai|file|filename|camera|megapixel|dpi|iso)$/.test(k)) return;
+      if(seen[k]) return;
+      seen[k]=1; candidates.push(k);
+    });
+  }
+  (Array.isArray(list)?list:[]).forEach(collect);
+
+  var titleWords=adobeCleanTitle(title).toLowerCase().match(/[a-z0-9]+/g)||[];
+  var priority=[];
+  var prioritySeen={};
+  function addPriority(w){
+    w=String(w||"").toLowerCase().trim();
+    if(!w || prioritySeen[w] || bannedKeywords.has(w)||stopWords.has(w)||genericKeywords.has(w)) return;
+    prioritySeen[w]=1;
+    if(candidates.indexOf(w)!==-1) priority.push(w);
+  }
+  // First use important title words, then fill the first 10 with the AI supplied ranking.
+  titleWords.forEach(addPriority);
+  candidates.forEach(function(k){ if(priority.length<RULES.priorityCount) addPriority(k); });
+
+  var rest=candidates.filter(function(k){return !prioritySeen[k];});
+  return priority.concat(rest).slice(0,RULES.keywordCount);
+}
+
+function adobeNormalizeMetadata(title,keywords){
+  var cleanTitle=adobeCleanTitle(title);
+  var cleanKeywords=adobeNormalizeKeywords(keywords,cleanTitle);
+  return {title:cleanTitle,keywords:cleanKeywords};
+}
+
 function buildMetadata(name,type,labels){
   var isVector=(type==="svg"||type==="eps"||type==="ai");
   var fileWords=tokenize(name).filter(function(w){return !stopWords.has(w);});
@@ -654,7 +695,6 @@ function buildMetadata(name,type,labels){
 
   /* 4. type-relevant secondary terms */
   var pool=isVector?vectorPool:photoPool;
-  if(isVector){addUnique(keywords,"vector");}
   var i=0;
   while(keywords.length<RULES.keywordCount&&i<pool.length){addUnique(keywords,pool[i]);i++;}
 
@@ -673,8 +713,9 @@ function buildMetadata(name,type,labels){
     var ex=keywords.filter(function(k){return main.toLowerCase().indexOf(k)===-1;}).slice(0,3);
     title=main+", "+ex.join(", ");
   }
-  title=title.replace(/\s+/g," ").replace(/,\s*,/g,",").replace(/,\s*Design$/," Design").slice(0,RULES.titleMaxLength).trim();
-  return {title:title,keywords:keywords,isVector:isVector};
+  title=adobeCleanTitle(title);
+  var normalized=adobeNormalizeMetadata(title,keywords);
+  return {title:normalized.title,keywords:normalized.keywords,isVector:isVector};
 }
 
 /* =========================
@@ -757,16 +798,28 @@ function computeRisk(idx){
 
 async function downloadImage(id){
   var item=getItem(id);if(!item) return;
-  var src=await getSearchFile(item);
-  if(!src){banner("No preview image for this file. Export a PNG or JPG preview first.","");return;}
-  var isRaster=(item.type==="jpg"||item.type==="png");
-  var name=isRaster?item.name:item.name.replace(/\.[^.]+$/,"")+"-preview.png";
-  var a=document.createElement("a");
-  a.href=URL.createObjectURL(src);a.download=name;
-  document.body.appendChild(a);a.click();a.remove();
-  banner("⬇️ Saved to Downloads as "+escapeHTML(name)+". Open tineye.com, tap Upload and choose it.","ok");
+  var btn=document.getElementById("downloadImgBtn"+id);
+  if(btn){btn.disabled=true;btn.textContent="⏳ Downloading...";}
+  try{
+    var src=await getSearchFile(item);
+    if(!src){banner("No preview image for this file. Export a PNG or JPG preview first.","warning");return;}
+    var isRaster=(item.type==="jpg"||item.type==="png");
+    var name=isRaster?item.name:item.name.replace(/\.[^.]+$/,"" )+"-preview.png";
+    var objectUrl=URL.createObjectURL(src);
+    var a=document.createElement("a");
+    a.href=objectUrl;a.download=name;
+    document.body.appendChild(a);a.click();a.remove();
+    if(btn){btn.textContent="✅ Downloaded";btn.classList.add("copied");}
+    banner("⬇️ Saved to Downloads as "+escapeHTML(name)+".","ok");
+    setTimeout(function(){URL.revokeObjectURL(objectUrl);if(btn){btn.disabled=false;btn.textContent="⬇️ Download";btn.classList.remove("copied");}},1800);
+  }catch(err){
+    console.error("Image download error:",err);
+    banner("⚠️ Image could not be downloaded.","warning");
+    if(btn){btn.disabled=false;btn.textContent="⬇️ Download";}
+  }finally{
+    if(btn && btn.textContent==="⏳ Downloading..."){btn.disabled=false;btn.textContent="⬇️ Download";}
+  }
 }
-
 function canvasToFile(c){
   return new Promise(function(res){
     c.toBlob(function(b){res(b?new File([b],"search.png",{type:"image/png"}):null);},"image/png");
@@ -807,69 +860,41 @@ function canvasPngBlob(c){
   });
 }
 
-function setCopyButtonState(id,state){
-  var btn=document.getElementById("copyImg"+id);
-  if(!btn) return;
-  if(btn._copyTimer) clearTimeout(btn._copyTimer);
-  if(state==="copying"){
-    btn.disabled=true;
-    btn.classList.remove("copied");
-    btn.innerHTML="⏳ Copying...";
-  }else if(state==="success"){
-    btn.disabled=false;
-    btn.classList.add("copied");
-    btn.innerHTML="✅ Copied";
-    btn._copyTimer=setTimeout(function(){
-      btn.disabled=false;
-      btn.classList.remove("copied");
-      btn.innerHTML="📋 Copy Image";
-    },1800);
-  }else{
-    btn.disabled=false;
-    btn.classList.remove("copied");
-    btn.innerHTML="📋 Copy Image";
-  }
-}
-
 async function copyImage(id){
   var item=getItem(id);
   if(!item) return;
-  setCopyButtonState(id,"copying");
-
+  var copyBtn=document.getElementById("copyImgBtn"+id);
   if(!window.isSecureContext || !navigator.clipboard || !window.ClipboardItem){
-    setCopyButtonState(id,"idle");
     alert("Image copy needs HTTPS. Open the site from your GitHub Pages address (https://...), not a local file/downloads page.");
     return;
   }
-
+  if(copyBtn){copyBtn.disabled=true;copyBtn.textContent="⏳ Copying...";}
   banner("📋 Preparing image for clipboard...","run");
-  var c=await getCopyCanvas(item);
-  if(!c){
-    setCopyButtonState(id,"idle");
-    banner("⚠️ Image preview could not be prepared.","warning");
-    return;
-  }
-
-  var blob=await canvasPngBlob(c);
-  if(!blob){
-    setCopyButtonState(id,"idle");
-    banner("⚠️ PNG copy data could not be created.","warning");
-    return;
-  }
-
   try{
-    /* ClipboardItem is the correct API for copying an actual image, not its URL. */
+    var c=await getCopyCanvas(item);
+    if(!c){banner("⚠️ Image preview could not be prepared.","warning");return;}
+    var blob=await canvasPngBlob(c);
+    if(!blob){banner("⚠️ PNG copy data could not be created.","warning");return;}
     var clipItem=new ClipboardItem({"image/png":blob});
     await navigator.clipboard.write([clipItem]);
-    setCopyButtonState(id,"success");
+    if(copyBtn){
+      copyBtn.disabled=false;
+      copyBtn.classList.add("copied");
+      copyBtn.textContent="✅ Copied";
+      clearTimeout(copyBtn._copiedTimer);
+      copyBtn._copiedTimer=setTimeout(function(){
+        copyBtn.classList.remove("copied");
+        copyBtn.textContent="📋 Copy Image";
+      },1800);
+    }
     banner("✅ Image copied. You can paste it directly into Canva, Adobe, chat, or another app.","ok");
   }catch(err){
     console.error("Image clipboard error:",err);
-    setCopyButtonState(id,"idle");
     banner("⚠️ Browser blocked image clipboard. Use the GitHub Pages HTTPS version and allow clipboard access.","warning");
+  }finally{
+    if(copyBtn && copyBtn.textContent==="⏳ Copying..."){copyBtn.disabled=false;copyBtn.textContent="📋 Copy Image";}
   }
 }
-
 async function getSearchFile(item){
   if(item.type==="jpg"||item.type==="png") return item.file;
   var c=item.canvas;
@@ -877,15 +902,13 @@ async function getSearchFile(item){
   return c?await canvasToFile(c):null;
 }
 
-async function reverseSearch(id,site){
+function reverseSearch(id,site){
   var item=getItem(id);if(!item) return;
   var url=site==="tineye"?"https://tineye.com/":"https://www.google.com/";
-  var label=site==="tineye"?"TinEye":"Google Lens";
-  window.open(url,"_blank");
-  await downloadImage(id);
-  banner("⬇️ Image saved to Downloads and "+label+" opened in a new tab. Tap the upload (or camera) button there and choose the saved image.","ok");
+  var label=site==="tineye"?"TinEye":"Google";
+  window.open(url,"_blank","noopener");
+  banner(label+" opened in a new tab. Use the site's upload option to select the image when needed.","ok");
 }
-
 function makeFileName(item){
   // Original uploaded filename is the permanent metadata key.
   return item.origName || item.name || ("file-" + item.id + "." + (item.ext || "jpg"));
@@ -1035,14 +1058,15 @@ function cardHTML(item){
   var kw=item.keywords.map(function(k,i){return '<span class="keyword'+(i<RULES.priorityCount?" top":"")+'">'+escapeHTML(k)+"</span>";}).join("");
   return '<div class="cardTop"><span class="serial" id="sn'+item.id+'">#'+(getIndex(item.id)+1)+'</span><span class="badge">'+escapeHTML(item.type.toUpperCase())+'</span><span class="fname" id="fnm'+item.id+'">'+escapeHTML(item.name)+'</span></div>'+
   prev+
-  '<button class="dlBtn" id="copyImg'+item.id+'" onclick="copyImage('+item.id+')">📋 Copy Image</button>'+
+  '<button class="dlBtn" id="copyImgBtn'+item.id+'" onclick="copyImage('+item.id+')">📋 Copy Image</button>'+
+  '<button class="dlBtn" id="downloadImgBtn'+item.id+'" onclick="downloadImage('+item.id+')">⬇️ Download</button>'+
   '<button class="simBtn" onclick="checkOne('+item.id+')">🔍 Similarity Check</button>'+
   '<div class="risk ok" id="risk'+item.id+'"><b>Similarity Risk:</b> tap the button above to check</div>'+
   '<div class="row"><button class="btn-slate" onclick="reverseSearch('+item.id+',\'tineye\')">🌐 TinEye</button><button class="btn-slate" onclick="reverseSearch('+item.id+',\'google\')">🔎 Google Lens</button></div>'+
   '<div class="status '+statusCls+'" id="st'+item.id+'">'+statusTxt+'</div>'+
   '<div class="field"><label>Original Filename (Metadata ID)</label><input type="text" id="fn'+item.id+'" value="'+escapeHTML(item.name)+'" readonly oninput="setName('+item.id+',this.value)"><div class="counter" id="fh'+item.id+'">'+(item.syncName?'Original filename is locked and will be used to match the Adobe CSV.':'Original filename is locked and will be used to match the Adobe CSV.')+'</div></div>'+
   '<div class="field"><label>Title</label><input type="text" id="ti'+item.id+'" value="'+escapeHTML(item.title)+'" placeholder="Paste title here" oninput="setField('+item.id+',\'title\',this.value)"><div class="counter" id="tc'+item.id+'">'+item.title.length+' / '+RULES.titleMaxLength+'</div></div>'+
-  '<div class="field"><label>Keywords</label><textarea id="kw'+item.id+'" placeholder="Paste keywords, separated by commas" oninput="updateKeywords('+item.id+',this.value)">'+escapeHTML(item.keywords.join(", "))+'</textarea><div class="counter" id="kc'+item.id+'">'+item.keywords.length+' / '+RULES.keywordCount+'</div><div class="keywords" id="kchips'+item.id+'">'+kw+'</div></div>'+
+  '<div class="field"><label>Keywords <small>(30 single words)</small></label><textarea id="kw'+item.id+'" placeholder="keyword1, keyword2, keyword3, ... (30 single words)" oninput="updateKeywords('+item.id+',this.value)">'+escapeHTML(item.keywords.join(", "))+'</textarea><div class="counter" id="kc'+item.id+'">'+item.keywords.length+' / '+RULES.keywordCount+'</div><div class="keywords" id="kchips'+item.id+'">'+kw+'</div></div>'+
   '<div class="field"><label>Adobe Category</label><select onchange="setField('+item.id+',\'category\',this.value)">'+categoryOptions(item.category)+'</select></div>'+
   '<div class="row"><button onclick="copyOne('+item.id+')">Copy Metadata</button><button class="btn-light" onclick="moveItem('+item.id+',-1)">▲ Up</button><button class="btn-light" onclick="moveItem('+item.id+',1)">▼ Down</button><button class="danger" onclick="removeOne('+item.id+')">Remove</button></div>';
 }
@@ -1273,8 +1297,9 @@ async function processItem(item){
     (gem.keywords||[]).forEach(function(w){
       if(kws.length<RULES.keywordCount) addUnique(kws,w);
     });
-    meta.title=gem.title;
-    meta.keywords=kws.slice(0,RULES.keywordCount);
+    var gemNorm=adobeNormalizeMetadata(gem.title,kws);
+    meta.title=gemNorm.title;
+    meta.keywords=gemNorm.keywords;
     item.category=gem.category;
   }
   item.title=meta.title;
@@ -1342,9 +1367,14 @@ function validateAdobeCSV(showUI){
     }
 
     if(!title) errors.push("#"+(idx+1)+" "+(fn||"file")+": Title খালি।");
-    if(title.length>70) errors.push("#"+(idx+1)+" "+fn+": Title "+title.length+" characters — 70-এর বেশি।");
+    if(title.length>RULES.titleMaxLength) errors.push("#"+(idx+1)+" "+fn+": Title "+title.length+" characters — "+RULES.titleMaxLength+"-এর বেশি।");
+    var titleWordCount=title?title.split(/\s+/).filter(Boolean).length:0;
+    if(title && titleWordCount<RULES.titleMinWords) errors.push("#"+(idx+1)+" "+fn+": Title-এ "+titleWordCount+"টি word আছে — কমপক্ষে "+RULES.titleMinWords+"টি দরকার।");
+    if(title && titleWordCount>RULES.titleMaxWords) errors.push("#"+(idx+1)+" "+fn+": Title-এ "+titleWordCount+"টি word আছে — সর্বোচ্চ "+RULES.titleMaxWords+"টি।");
+    if(title && /[^A-Za-z0-9 ]/.test(title)) errors.push("#"+(idx+1)+" "+fn+": Title-এ শুধু letters numbers এবং spaces থাকতে হবে।");
 
-    if(kws.length>50) errors.push("#"+(idx+1)+" "+fn+": "+kws.length+" keywords — 50-এর বেশি।");
+    if(kws.length!==RULES.keywordCount) errors.push("#"+(idx+1)+" "+fn+": "+kws.length+" keywords আছে — ঠিক "+RULES.keywordCount+"টি single-word keyword দরকার।");
+    if(kws.some(function(k){return /\s/.test(String(k).trim());})) errors.push("#"+(idx+1)+" "+fn+": সব keyword single word হতে হবে; phrase পাওয়া গেছে।");
     if(kws.length===0) errors.push("#"+(idx+1)+" "+fn+": Keywords খালি।");
 
     var lower={};
@@ -1387,21 +1417,33 @@ function validateAdobeCSV(showUI){
 
 function downloadCSV(){
   if(!filesData.length){alert("Upload files first.");return;}
+
+  /* Validate and show the report, but NEVER block the CSV download. */
   var check=validateAdobeCSV(true);
-  if(!check.ok){
-    banner("❌ Adobe CSV তৈরি বন্ধ রাখা হয়েছে। Validator-এর errors আগে ঠিক করুন.","warning");
-    alert("CSV download করা হয়নি। Adobe CSV Validator-এর errors আগে ঠিক করুন.");
-    return;
-  }
   var csv=buildAdobeCSVText();
   var blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
   var a=document.createElement("a");
   var url=URL.createObjectURL(blob);
   a.href=url;
   a.download="Adobe_Stock_Metadata.csv";
-  document.body.appendChild(a);a.click();a.remove();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
   setTimeout(function(){URL.revokeObjectURL(url);},1000);
-  banner("✅ Adobe CSV validated and downloaded successfully.","ok");
+
+  var csvButtons=document.querySelectorAll('button[onclick="downloadCSV()"],#adobeCsvDownloadBtn');
+  csvButtons.forEach(function(btn){
+    var original=btn.id==="adobeCsvDownloadBtn"?"⬇️ Adobe CSV Download":"💾 Adobe CSV";
+    btn.textContent="✅ CSV Downloaded";
+    btn.classList.add("copied");
+    clearTimeout(btn._csvDownloadedTimer);
+    btn._csvDownloadedTimer=setTimeout(function(){btn.textContent=original;btn.classList.remove("copied");},2200);
+  });
+  if(check.ok){
+    banner("✅ Adobe CSV downloaded successfully.","ok");
+  }else{
+    banner("⬇️ Adobe CSV downloaded successfully. Validator-এ "+check.errors.length+"টি issue দেখানো হয়েছে—প্রয়োজনে ঠিক করে আবার download করুন.","warning");
+  }
 }
 gemUI();
 updateGoogleAISelectedFile();
@@ -1424,8 +1466,11 @@ function extractAIMetadata(){
   var keywords=kwText.replace(/```[a-z]*|```/gi,"").replace(/\r?\n/g," ").split(/[,;|]/).map(function(k){return k.replace(/^[-*\d.\s]+/,"").trim();}).filter(Boolean);
   var seen={};
   keywords=keywords.filter(function(k){var key=k.toLowerCase();if(seen[key])return false;seen[key]=1;return true;});
-  if(title) item.title=title.slice(0,RULES.titleMaxLength);
-  if(keywords.length) item.keywords=keywords.slice(0,RULES.keywordCount);
+  if(title || keywords.length){
+    var normalized=adobeNormalizeMetadata(title || item.title, keywords);
+    if(title) item.title=normalized.title;
+    if(keywords.length) item.keywords=normalized.keywords;
+  }
   item.aiUsed="google-ai-mode";
   paintCard(item);
   st.className=keywords.length>=RULES.keywordCount?"aiPasteStatus ok":"aiPasteStatus warn";
