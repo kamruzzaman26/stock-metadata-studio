@@ -68,7 +68,11 @@ textarea{min-height:86px;resize:vertical}
 .header{position:relative}
 .menuBtn{position:absolute;top:12px;right:14px;width:42px;height:42px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:26px;line-height:1;cursor:pointer;padding:0}
 .menuBtn .dot{display:none;position:absolute;top:6px;right:6px;width:10px;height:10px;border-radius:50%;background:#22c55e;border:2px solid #1e3a8a}
+
 .menuBtn.on .dot{display:block}
+.headerDownBtn{position:absolute;top:58px;right:14px;z-index:101;width:42px;height:42px;padding:0;border:0;border-radius:50%;background:#fff;color:#172033;font-size:18px;font-weight:900;line-height:42px;text-align:center;box-shadow:0 6px 18px rgba(15,23,42,.25);cursor:pointer}
+.headerDownBtn:active{transform:scale(.94)}
+@media(max-width:600px){.headerDownBtn{top:56px;right:12px;width:40px;height:40px;line-height:40px;font-size:17px}}
 .menuBox{display:none;position:absolute;top:58px;right:14px;width:min(320px,calc(100vw - 28px));background:#fff;color:#172033;border-radius:16px;padding:14px;box-shadow:0 12px 36px rgba(15,23,42,.3);z-index:50}
 .menuBox.open{display:block}
 .adobeReady{margin-top:12px;padding:14px;border-radius:16px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;display:none}.adobeReady.show{display:block}.adobeReady strong{display:block;font-size:15px;margin-bottom:5px}.adobeReady button{margin-top:9px}.adobeReady a{color:inherit;text-decoration:none}
@@ -117,6 +121,13 @@ textarea{min-height:86px;resize:vertical}
 .aiStep{background:#f8fafc;border:1px solid #dbe4f0;border-radius:12px;padding:11px;font-size:13px;line-height:1.5}
 .aiStep span{color:#475569}
 @media(max-width:760px){.aiStepBox{grid-template-columns:1fr}}
+
+/* Floating page scroll controls */
+.scrollControls{position:fixed;right:14px;bottom:18px;z-index:100;display:flex;flex-direction:column;gap:8px;opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;transform:translateY(8px)}
+.scrollControls.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.scrollControls button{min-width:78px;height:42px;border:0;border-radius:12px;background:#172033;color:#fff;font-size:13px;font-weight:800;box-shadow:0 6px 18px rgba(15,23,42,.25);cursor:pointer;padding:0 12px}
+.scrollControls button:active{transform:scale(.94)}
+@media(max-width:600px){.scrollControls{right:10px;bottom:12px}.scrollControls button{min-width:72px;height:40px;padding:0 10px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -133,6 +144,7 @@ textarea{min-height:86px;resize:vertical}
 <p>Fast metadata workspace for stock contributors</p>
 </div>
 <button class="menuBtn" id="menuBtn" onclick="toggleMenu(event)" aria-label="Menu">⋮<span class="dot" id="menuDot"></span></button>
+<button type="button" class="headerDownBtn" onclick="scrollPageBottom()" title="Go to bottom" aria-label="Go to bottom">▼</button>
 <div class="menuBox" id="menuBox" onclick="event.stopPropagation()">
 <div style="font-size:14px;font-weight:700;margin-bottom:8px">🔑 API Key (Gemini)</div>
 <input type="password" id="gemKey" placeholder="Paste Gemini API key here" autocomplete="off">
@@ -203,6 +215,11 @@ textarea{min-height:86px;resize:vertical}
 <p class="note">Original filenames stay unchanged.</p>
 </div>
 
+
+<div class="scrollControls" id="scrollControls" aria-label="Page scroll controls">
+  <button type="button" onclick="scrollPageHome()" title="Home" aria-label="Home">⌂ Home</button>
+  <button type="button" onclick="scrollPageTop()" title="Top" aria-label="Top">▲ Top</button>
+</div>
 <script>
 /* =========================
    RULES (edit here)
@@ -1151,6 +1168,7 @@ function removeOne(id){
   if(el) el.remove();
   renumber();
   runRisk(false);
+  scheduleWorkspaceSave();
 }
 
 function clearAll(){
@@ -1158,6 +1176,7 @@ function clearAll(){
   if(!confirm("Remove all files?")) return;
   filesData.length=0;queue.length=0;
   document.getElementById("results").innerHTML="";
+  clearWorkspaceSave();
   banner("Upload files. Paste Title and Keywords.");
 }
 
@@ -1480,6 +1499,133 @@ function clearAIPaste(){
   var box=document.getElementById("aiPasteBox"); if(box) box.value="";
   var st=document.getElementById("aiPasteStatus"); if(st){st.className="aiPasteStatus";st.textContent="Paste Google AI result here.";}
 }
+
+/* =========================
+   AUTO SAVE / RESTORE WORKSPACE
+   Keeps uploaded files + metadata across background-tab reloads when browser storage permits.
+========================= */
+var workspaceDB=null,workspaceSaveTimer=null,workspaceRestoring=false;
+function openWorkspaceDB(){
+  return new Promise(function(resolve,reject){
+    if(!window.indexedDB){reject(new Error("IndexedDB unavailable"));return;}
+    var req=indexedDB.open("StockMetadataStudioDB",1);
+    req.onupgradeneeded=function(e){
+      var db=e.target.result;
+      if(!db.objectStoreNames.contains("workspace")) db.createObjectStore("workspace",{keyPath:"key"});
+    };
+    req.onsuccess=function(e){workspaceDB=e.target.result;resolve(workspaceDB);};
+    req.onerror=function(){reject(req.error||new Error("IndexedDB error"));};
+  });
+}
+function workspaceSnapshot(){
+  return {
+    key:"current",
+    savedAt:Date.now(),
+    nextId:nextId,
+    items:filesData.map(function(item){
+      return {
+        id:item.id,
+        name:item.origName||item.name,
+        origName:item.origName||item.name,
+        sourceFilename:item.sourceFilename||item.origName||item.name,
+        ext:item.ext,
+        type:item.type,
+        title:item.title||"",
+        keywords:Array.isArray(item.keywords)?item.keywords.slice(0,RULES.keywordCount):[],
+        category:item.category,
+        syncName:item.syncName!==false,
+        aiUsed:item.aiUsed||false,
+        state:item.state||"ready",
+        note:item.note||""
+      ,file:item.file||null};
+    })
+  };
+}
+function saveWorkspaceNow(){
+  if(workspaceRestoring) return;
+  if(!workspaceDB){
+    openWorkspaceDB().then(saveWorkspaceNow).catch(function(){});
+    return;
+  }
+  try{
+    var tx=workspaceDB.transaction("workspace","readwrite");
+    tx.objectStore("workspace").put(workspaceSnapshot());
+  }catch(e){}
+}
+function scheduleWorkspaceSave(){
+  if(workspaceRestoring) return;
+  clearTimeout(workspaceSaveTimer);
+  workspaceSaveTimer=setTimeout(saveWorkspaceNow,450);
+}
+function clearWorkspaceSave(){
+  clearTimeout(workspaceSaveTimer);
+  if(!workspaceDB) return;
+  try{workspaceDB.transaction("workspace","readwrite").objectStore("workspace").delete("current");}catch(e){}
+}
+async function restoreWorkspace(){
+  try{
+    await openWorkspaceDB();
+    var rec=await new Promise(function(resolve,reject){
+      var req=workspaceDB.transaction("workspace","readonly").objectStore("workspace").get("current");
+      req.onsuccess=function(){resolve(req.result||null);};
+      req.onerror=function(){reject(req.error);};
+    });
+    if(!rec||!Array.isArray(rec.items)||!rec.items.length) return;
+    workspaceRestoring=true;
+    filesData.length=0;
+    var maxId=0;
+    rec.items.forEach(function(r){
+      if(!r.file) return;
+      var f;
+      try{f=new File([r.file],r.origName||r.name,{type:r.file.type||"",lastModified:r.file.lastModified||Date.now()});}
+      catch(e){f=r.file;}
+      var item={
+        id:r.id,file:f,name:r.origName||r.name,origName:r.origName||r.name,sourceFilename:r.sourceFilename||r.origName||r.name,
+        ext:r.ext,type:r.type,title:r.title||"",keywords:Array.isArray(r.keywords)?r.keywords.slice(0,RULES.keywordCount):[],
+        category:r.category==null?8:r.category,syncName:r.syncName!==false,state:"ready",stage:"",previewEl:null,previewUrl:null,canvas:null,aiUsed:r.aiUsed||false,note:r.note||""
+      };
+      if(item.type==="jpg"||item.type==="png"||item.type==="svg"){
+        item.previewEl="img";
+        item.previewUrl=URL.createObjectURL(item.file);
+      }else{
+        item.previewNote="Preview available after AI Analyze.";
+      }
+      filesData.push(item);
+      if(item.id>maxId) maxId=item.id;
+    });
+    nextId=Math.max(Number(rec.nextId)||1,maxId+1);
+    filesData.forEach(function(item){paintCard(item);});
+    if(filesData.length){
+      banner("↩️ Previous workspace restored automatically. "+filesData.length+" file(s) recovered.","ok");
+    }
+  }catch(e){
+    console.warn("Workspace restore failed",e);
+  }finally{
+    workspaceRestoring=false;
+  }
+}
+
+/* Save whenever a card is rendered; writes are debounced. */
+var _originalPaintCard=paintCard;
+paintCard=function(item){_originalPaintCard(item);scheduleWorkspaceSave();};
+
+/* Floating Up / Down controls */
+function scrollPageTop(){window.scrollTo({top:0,behavior:"smooth"});}
+function scrollPageHome(){
+  var home=document.querySelector(".header");
+  if(home) home.scrollIntoView({behavior:"smooth",block:"start"});
+  else scrollPageTop();
+}
+function scrollPageBottom(){window.scrollTo({top:document.documentElement.scrollHeight,behavior:"smooth"});}
+function updateScrollControls(){
+  var el=document.getElementById("scrollControls");
+  if(!el) return;
+  el.classList.toggle("show",window.scrollY>180);
+}
+window.addEventListener("scroll",updateScrollControls,{passive:true});
+window.addEventListener("load",function(){updateScrollControls();restoreWorkspace();});
+window.addEventListener("beforeunload",saveWorkspaceNow);
+
 </script>
 </body>
 </html>
