@@ -14,6 +14,11 @@ body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-g
 .header p{margin:0;opacity:.8;font-size:14px}
 .panel{background:#fff;border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 8px 28px rgba(15,23,42,.08);border:1px solid #e8edf5}
 .toolbar{display:flex;flex-wrap:wrap;gap:10px}
+.csvImportBtn{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 6px 16px rgba(124,58,237,.25);font-size:16px;padding:15px;margin-top:10px}
+.csvImportHelp{font-size:12px;line-height:1.6;color:#64748b;margin:8px 2px 0}
+.csvImportStatus{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f8fafc;border:1px solid #dbe4f0;font-size:13px;line-height:1.6;color:#475569}
+.csvImportStatus.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+.csvImportStatus.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
 .mainActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,auto));gap:10px;margin-top:12px}
 .mainActions button{width:100%;min-height:54px}
 @media(max-width:650px){.mainActions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mainActions button{min-height:50px;padding:11px 6px;font-size:12px}}
@@ -173,6 +178,11 @@ textarea{min-height:86px;resize:vertical}
 <label class="uploadBtn">📁 Upload JPG / PNG / SVG / EPS / AI
 <input id="fileInput" type="file" multiple accept=".jpg,.jpeg,.png,.svg,.eps,.ai,image/jpeg,image/png,image/svg+xml">
 </label>
+<label class="uploadBtn csvImportBtn">📥 Import Metadata CSV
+<input id="metadataCsvInput" type="file" accept=".csv,text/csv,application/vnd.ms-excel">
+</label>
+<div class="csvImportHelp">Google AI Mode থেকে তৈরি CSV নির্বাচন করো। ওয়েবসাইট আগে Filename দিয়ে ম্যাচ করবে; না মিললে একই ক্রমে থাকা ফাইলগুলোর সঙ্গে মিলিয়ে দেখবে। Import করার আগে ফলাফল যাচাই করবে।</div>
+<div id="csvImportStatus" class="csvImportStatus" aria-live="polite">CSV এখনো Import করা হয়নি।</div>
 </div>
 <div class="mainActions">
   <button class="btn-analyze" onclick="analyzeAll()" title="Analyze all uploaded files with AI">🤖 AI Analyze</button>
@@ -1028,6 +1038,98 @@ function showAdobeCSVSteps(){
   var el=document.getElementById("adobeCSVSteps");
   if(el) el.style.display=el.style.display==="none"?"block":"none";
 }
+
+
+/* =========================
+   BULK METADATA CSV IMPORT
+   Supports quoted CSV fields and comma-separated keyword cells.
+========================= */
+function parseCSVRows(text){
+  text=String(text||'').replace(/^\uFEFF/,'');
+  var rows=[],row=[],field='',quoted=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i];
+    if(quoted){
+      if(ch==='"' && text[i+1]==='"'){field+='"';i++;}
+      else if(ch==='"'){quoted=false;}
+      else field+=ch;
+    }else{
+      if(ch==='"') quoted=true;
+      else if(ch===','){row.push(field);field='';}
+      else if(ch==='\n'){row.push(field);rows.push(row);row=[];field='';}
+      else if(ch!=='\r') field+=ch;
+    }
+  }
+  if(field.length||row.length){row.push(field);rows.push(row);}
+  return rows.filter(function(r){return r.some(function(v){return String(v).trim()!=='';});});
+}
+function csvHeaderKey(v){return String(v||'').trim().toLowerCase().replace(/[\s_\-]+/g,'').replace(/[^a-z0-9]/g,'');}
+function filenameKey(v){
+  return String(v||'').trim().replace(/\\/g,'/').split('/').pop().replace(/\.[^.]+$/,'').toLowerCase().replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+}
+function csvCategoryValue(v){
+  var s=String(v||'').trim();
+  if(!s) return null;
+  if(/^\d+$/.test(s) && categories.some(function(c){return String(c[0])===s;})) return Number(s);
+  var key=csvHeaderKey(s);
+  for(var i=0;i<categories.length;i++) if(csvHeaderKey(categories[i][1])===key) return categories[i][0];
+  return null;
+}
+function importMetadataCSV(file){
+  var status=document.getElementById('csvImportStatus');
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onerror=function(){status.className='csvImportStatus warn';status.textContent='CSV ফাইল পড়া যায়নি। আবার চেষ্টা করো।';};
+  reader.onload=function(){
+    try{
+      var rows=parseCSVRows(reader.result);
+      if(rows.length<2) throw new Error('CSV-তে header-এর পর কোনো metadata row পাওয়া যায়নি।');
+      var headers=rows[0].map(csvHeaderKey);
+      function col(names){for(var i=0;i<names.length;i++){var ix=headers.indexOf(names[i]);if(ix>=0)return ix;}return -1;}
+      var fi=col(['filename','file name','assetname','name']);
+      var ti=col(['title','assettitle']);
+      var ki=col(['keywords','keyword','tags']);
+      var ci=col(['category','adobecategory']);
+      if(ti<0||ki<0) throw new Error('Title ও Keywords কলাম পাওয়া যায়নি। CSV header-এ Filename, Title, Keywords, Category রাখো।');
+      var records=rows.slice(1).map(function(r,index){
+        var kws=String(ki>=0?r[ki]||'':'').split(/[,;|]/).map(function(x){return x.trim();}).filter(Boolean);
+        var seen={}; kws=kws.filter(function(x){var k=x.toLowerCase();if(seen[k])return false;seen[k]=1;return true;});
+        return {rowNo:index+2,filename:fi>=0?String(r[fi]||'').trim():'',title:String(r[ti]||'').trim(),keywords:kws,category:ci>=0?csvCategoryValue(r[ci]):null};
+      }).filter(function(r){return r.title||r.keywords.length;});
+      if(!records.length) throw new Error('কোনো Title বা Keywords পাওয়া যায়নি।');
+      if(!filesData.length) throw new Error('আগে ওয়েবসাইটে সংশ্লিষ্ট JPG/PNG/SVG ফাইলগুলো Upload করো, তারপর Metadata CSV Import করো।');
+      var used={},matched=0,unmatched=[],applied=0;
+      records.forEach(function(rec,idx){
+        var target=null;
+        if(rec.filename){var key=filenameKey(rec.filename);target=filesData.find(function(it){return !used[it.id]&&(filenameKey(it.origName||it.name)===key);});}
+        // Only use order matching if no filename match exists and row/file counts align.
+        if(!target && records.length===filesData.length){target=filesData[idx]&&!used[filesData[idx].id]?filesData[idx]:null;}
+        if(!target){unmatched.push(rec.filename||('CSV row '+rec.rowNo));return;}
+        used[target.id]=true;matched++;
+        if(rec.title) target.title=rec.title.slice(0,RULES.titleMaxLength);
+        if(rec.keywords.length){
+          var normalized=adobeNormalizeMetadata(target.title||rec.title,rec.keywords);
+          target.keywords=normalized.keywords.length?normalized.keywords:rec.keywords.slice(0,RULES.keywordCount);
+        }
+        if(rec.category!==null) target.category=rec.category;
+        target.syncName=true;target.name=target.origName;target.aiUsed='csv-import';target.state='ready';target.note='';
+        paintCard(target);applied++;
+      });
+      scheduleWorkspaceSave();
+      var msg='Import সম্পন্ন: '+applied+'টি record ওয়েবসাইটের ফাইলে বসানো হয়েছে। CSV-তে '+records.length+'টি metadata row পাওয়া গেছে।';
+      if(unmatched.length) msg+=' মেলেনি: '+unmatched.length+'টি ('+unmatched.slice(0,8).join(', ')+(unmatched.length>8?'…':'')+')।';
+      status.className='csvImportStatus '+(unmatched.length?'warn':'ok');status.textContent=msg;
+      banner('📥 Metadata CSV import complete: '+applied+' record(s) applied.',unmatched.length?'run':'ok');
+      var top=document.getElementById('csvImportStatus');if(top)top.scrollIntoView({behavior:'smooth',block:'center'});
+    }catch(err){status.className='csvImportStatus warn';status.textContent='Import হয়নি: '+err.message;}
+  };
+  reader.readAsText(file);
+}
+document.getElementById('metadataCsvInput').addEventListener('change',function(e){
+  var file=e.target.files&&e.target.files[0];
+  if(file) importMetadataCSV(file);
+  e.target.value='';
+});
 
 /* =========================
    UI
