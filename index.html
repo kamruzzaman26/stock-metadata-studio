@@ -19,7 +19,7 @@ body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:linear-g
 .csvImportStatus{margin-top:10px;padding:10px 12px;border-radius:12px;background:#f8fafc;border:1px solid #dbe4f0;font-size:13px;line-height:1.6;color:#475569}
 .csvImportStatus.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
 .csvImportStatus.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
-.mainActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,auto));gap:10px;margin-top:12px}
+.batchPanel{margin-top:12px;padding:14px;border:1px solid #bfdbfe;border-radius:16px;background:#eff6ff}.batchPanel h3{margin:0 0 6px;font-size:16px}.batchControls{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:10px 0}.batchList{background:#fff;border:1px solid #dbe4f0;border-radius:12px;padding:10px;max-height:220px;overflow:auto;font-size:13px;line-height:1.7;overflow-wrap:anywhere}.batchPanel button{width:100%;margin-top:0}.batchWorkflowButtons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}.batchWorkflowButtons button{min-height:64px;padding:10px 7px;font-size:13px;white-space:normal}.batchWorkflowButtons button.done{background:linear-gradient(135deg,#047857,#10b981);outline:2px solid #a7f3d0}@media(max-width:520px){.batchWorkflowButtons{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.batchWorkflowButtons button{font-size:11px;padding:9px 4px;min-height:68px}}.batchPanel select{background:#fff}.mainActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,auto));gap:10px;margin-top:12px}
 .mainActions button{width:100%;min-height:54px}
 @media(max-width:650px){.mainActions{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mainActions button{min-height:50px;padding:11px 6px;font-size:12px}}
 button,.uploadBtn{border:0;border-radius:14px;padding:13px 18px;font-weight:700;cursor:pointer;font-size:15px;color:#fff;font-family:inherit;transition:transform .12s,box-shadow .12s}
@@ -183,6 +183,25 @@ textarea{min-height:86px;resize:vertical}
 </label>
 <div class="csvImportHelp">Google AI Mode থেকে তৈরি CSV নির্বাচন করো। ওয়েবসাইট আগে Filename দিয়ে ম্যাচ করবে; না মিললে একই ক্রমে থাকা ফাইলগুলোর সঙ্গে মিলিয়ে দেখবে। Import করার আগে ফলাফল যাচাই করবে।</div>
 <div id="csvImportStatus" class="csvImportStatus" aria-live="polite">CSV এখনো Import করা হয়নি।</div>
+</div>
+<div class="batchPanel" id="batchPanel">
+  <h3>🧩 Batch Workflow — Google AI Mode</h3>
+  <div class="csvImportHelp">আপলোড করা ফাইলগুলো ক্রমানুসারে ব্যাচে ভাগ করো। দেখানো তালিকা দেখে একই ব্যাচের preview-গুলো Google AI Mode-এ attach করো, তারপর নিচের prompt কপি করো।</div>
+  <div class="batchControls">
+    <div><label for="batchSize" style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">প্রতি ব্যাচে ফাইল</label><select id="batchSize" onchange="renderBatchPanel()"><option value="5">৫টি</option><option value="10" selected>১০টি</option><option value="15">১৫টি</option><option value="20">২০টি</option></select></div>
+    <div><label for="batchNumber" style="display:block;font-size:12px;font-weight:700;margin-bottom:5px">ব্যাচ নির্বাচন</label><select id="batchNumber" onchange="renderBatchPanel()"><option value="1">Batch 1</option></select></div>
+  </div>
+  <div id="batchSummary" class="csvImportStatus">প্রথমে ফাইল আপলোড করো।</div>
+  <div id="batchFileList" class="batchList">এখানে ফাইলের নাম দেখাবে।</div>
+  <div class="batchWorkflowButtons" id="batchWorkflowButtons">
+    <button type="button" class="btn-slate" id="workflowPreviewCsv" onclick="workflowAction(this, previewAdobeCSV)">1. Preview CSV</button>
+    <button type="button" class="btn-slate" id="workflowDownloadCsv" onclick="workflowAction(this, downloadCSV)">2. Adobe CSV Download</button>
+    <button type="button" class="btn-slate" id="workflowCopyPrompt" onclick="copyMasterPrompt(this)">3. CSV create Prompt Copy</button>
+    <button type="button" class="btn-slate" id="copyBatchImagesBtn" onclick="copyBatchImages()">4. 🖼️ Batch Preview PNG Copy</button>
+    <button type="button" class="btn-slate" id="workflowDownloadPreview" onclick="downloadBatchImages()">5. ⬇️ Batch Preview PNG Download</button>
+    <button type="button" class="btn-slate" id="workflowOpenAdobe" onclick="window.open('https://contributor.stock.adobe.com/uploads','_blank','noopener'); markWorkflowDone(this)">6. 🚀 Open Adobe Uploaded Files</button>
+  </div>
+  <div id="batchStatus" class="csvImportHelp" aria-live="polite">নির্বাচিত ব্যাচের প্রিভিউ একটি PNG ছবিতে তৈরি হবে—কপি করো অথবা PNG ডাউনলোড করে Google AI Mode-এ দাও।</div>
 </div>
 <div class="mainActions">
   <button class="btn-analyze" onclick="analyzeAll()" title="Analyze all uploaded files with AI">🤖 AI Analyze</button>
@@ -1269,6 +1288,7 @@ function removeOne(id){
   var el=document.getElementById("card"+id);
   if(el) el.remove();
   renumber();
+  renderBatchPanel();
   runRisk(false);
   scheduleWorkspaceSave();
 }
@@ -1279,33 +1299,180 @@ function clearAll(){
   filesData.length=0;queue.length=0;
   document.getElementById("results").innerHTML="";
   clearWorkspaceSave();
+  renderBatchPanel();
   banner("Upload files. Paste Title and Keywords.");
 }
+
+
+/* =========================
+   BATCH WORKFLOW
+========================= */
+function batchSizeValue(){return Number(document.getElementById("batchSize").value)||10;}
+function batchCount(){return Math.max(1,Math.ceil(filesData.length/batchSizeValue()));}
+function getCurrentBatch(){var size=batchSizeValue();var n=Number(document.getElementById("batchNumber").value)||1;return filesData.slice((n-1)*size,n*size);}
+function renderBatchPanel(){
+  var size=batchSizeValue(), count=batchCount(), sel=document.getElementById("batchNumber"), old=Number(sel.value)||1;
+  sel.innerHTML="";for(var i=1;i<=count;i++){var o=document.createElement("option");o.value=String(i);o.textContent="Batch "+i;sel.appendChild(o);}sel.value=String(Math.min(old,count));
+  var n=Number(sel.value)||1, start=filesData.length?(n-1)*size+1:0, batch=getCurrentBatch();
+  document.getElementById("batchSummary").textContent=filesData.length?"মোট "+filesData.length+"টি ফাইল · "+count+"টি ব্যাচ · Batch "+n+"-এ "+batch.length+"টি ফাইল (ক্রম "+start+"–"+(start+batch.length-1)+")":"প্রথমে ফাইল আপলোড করো।";
+  document.getElementById("batchFileList").innerHTML=batch.length?batch.map(function(item,i){return "<div>"+(start+i)+". "+escapeHTML(item.name)+"</div>";}).join(""):"এখানে ফাইলের নাম দেখাবে।";
+}
+async function makeBatchContactSheet(batch){
+  if(!batch.length) throw new Error("এই ব্যাচে কোনো ফাইল নেই।");
+  var cols=2, tileW=600, tileH=420, gap=18, pad=24, headerH=52;
+  var rows=Math.ceil(batch.length/cols);
+  var sheet=document.createElement("canvas");
+  sheet.width=pad*2+cols*tileW+gap*(cols-1);
+  sheet.height=pad*2+rows*tileH+gap*(rows-1)+headerH;
+  var ctx=sheet.getContext("2d");
+  ctx.fillStyle="#ffffff";ctx.fillRect(0,0,sheet.width,sheet.height);
+  ctx.fillStyle="#111827";ctx.font="bold 26px Arial, sans-serif";ctx.fillText("Stock Metadata Studio — Batch Preview",pad,pad+28);
+  for(var i=0;i<batch.length;i++){
+    var item=batch[i],c=await getCopyCanvas(item);
+    if(!c) throw new Error("Preview unavailable: "+item.name);
+    var x=pad+(i%cols)*(tileW+gap), y=pad+headerH+Math.floor(i/cols)*(tileH+gap);
+    ctx.fillStyle="#f8fafc";ctx.fillRect(x,y,tileW,tileH);
+    ctx.strokeStyle="#cbd5e1";ctx.lineWidth=2;ctx.strokeRect(x,y,tileW,tileH);
+    ctx.fillStyle="#0f172a";ctx.font="bold 19px Arial, sans-serif";
+    var label=(i+1)+". "+String(item.origName||item.name||("Design "+(i+1)));
+    if(label.length>52) label=label.slice(0,49)+"...";
+    ctx.fillText(label,x+14,y+28);
+    var maxW=tileW-28,maxH=tileH-54,scale=Math.min(maxW/c.width,maxH/c.height);
+    var dw=c.width*scale,dh=c.height*scale;
+    ctx.drawImage(c,x+(tileW-dw)/2,y+40+(maxH-dh)/2,dw,dh);
+  }
+  return sheet;
+}
+async function copyBatchImages(){
+  var batch=getCurrentBatch(),status=document.getElementById("batchStatus"),btn=document.getElementById("copyBatchImagesBtn");
+  if(!batch.length){status.textContent="আগে ফাইল আপলোড করো।";return;}
+  if(btn){btn.disabled=true;btn.textContent="⏳ Batch Preview তৈরি হচ্ছে...";}
+  try{
+    var canvas=await makeBatchContactSheet(batch),blob=await canvasPngBlob(canvas);
+    if(!blob) throw new Error("Batch Preview PNG তৈরি করা যায়নি।");
+    if(!window.isSecureContext||!navigator.clipboard||!window.ClipboardItem||!navigator.clipboard.write) throw new Error("এই ব্রাউজারে image clipboard সমর্থিত নয়।");
+    await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+    status.textContent="✅ পুরো ব্যাচের Batch Preview PNG কপি হয়েছে। Google AI Mode-এ Paste করো।";
+    markWorkflowDone(btn);
+  }catch(err){
+    console.error("Contact sheet clipboard error:",err);
+    status.textContent="⚠️ Clipboard-এ কপি করা যায়নি। ‘Batch Preview PNG Download’ চাপো, তারপর Google AI Mode-এ ওই PNG attach করো।";
+  }finally{if(btn){btn.disabled=false;btn.textContent="4. 🖼️ Batch Preview PNG Copy";}}
+}
+async function downloadBatchImages(){
+  var batch=getCurrentBatch(),status=document.getElementById("batchStatus");
+  if(!batch.length){status.textContent="আগে ফাইল আপলোড করো।";return;}
+  try{
+    var canvas=await makeBatchContactSheet(batch),blob=await canvasPngBlob(canvas);
+    if(!blob) throw new Error("PNG export failed");
+    var url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="Stock_Metadata_Batch_"+(Number(document.getElementById("batchNumber").value)||1)+"_Batch_Preview.png";
+    document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},10000);
+    status.textContent="⬇️ Batch Preview PNG Download শুরু হয়েছে। এই এক ছবিতে ব্যাচের "+batch.length+"টি প্রিভিউ ও ফাইলের নাম আছে। Google AI Mode-এ PNG-টি attach করো।";
+    markWorkflowDone(document.getElementById("workflowDownloadPreview"));
+  }catch(e){status.textContent="⚠️ Contact Sheet তৈরি হয়নি: "+(e.message||e);}
+}
+function batchPromptText(){var batch=getCurrentBatch();var n=Number(document.getElementById("batchNumber").value)||1;return "Analyze every attached stock design preview individually. This is Batch "+String(n).padStart(2,"0")+". Process every attached image in attachment order and return exactly one row per image. Preserve the exact filename when available; otherwise use these filenames in this order:\n"+batch.map(function(item){return item.name;}).join("\n")+"\nCreate accurate concise English Adobe Stock titles, relevant keywords ordered by importance, and the best category. Do not invent details. Return valid CSV only with columns Filename,Title,Keywords,Category. Quote each keyword-list CSV field correctly; separate keywords with commas. Check that output row count equals attached image count.";}
+var MASTER_METADATA_PROMPT = `Metadeta CSV create Prompt
+
+I am working as an Adobe Stock Contributor specializing in vector (SVG) designs. For this entire batch of work, you must strictly adhere to the following rules:
+
+1. Project Initialization: We will first provide you with a metadata Excel/CSV sheet. You will analyze the file names and determine the total number of designs to set up the sequence/order.
+2. Sequence Continuity & Visual Analysis: Once you receive the file and confirm, we will start sending screenshots containing previews of 10 to 20 vectors at a time in chronological order. You will analyze every vector individually. If any duplicate or identical design is repeated across screenshots, you must immediately alert us about the match in the Bengali language.
+3. Category Selection Rules: For each design, analyze the content and assign the most appropriate category name from the official Adobe Stock list below. If the visual content does not clearly fit any specific category, default strictly to "Graphic Resources".
+* Official Categories List:
+  1. Animals
+  2. Buildings and Architecture
+  3. Business
+  4. Drinks
+  5. The Environment
+  6. States of Mind
+  7. Food
+  8. Graphic Resources
+  9. Hobbies and Leisure
+  10. Industry
+  11. Landscapes
+  12. Lifestyle
+  13. People
+  14. Plants and Flowers
+  15. Culture and Religion
+  16. Science
+  17. Social Issues
+  18. Sports
+  19. Technology
+  20. Transport
+  21. Travel
+4. Title Requirements: For each file, you will generate an SEO-friendly title that must be between 15 to 25 words long. This must be provided in a completely separate, easy-to-copy code box.
+* Example Title Format: 18 Plus Age Restriction Icon Set with Prohibited Adult Content Symbols for Websites, Apps, Warning Labels, and Digital Media Designs
+5. Keyword Requirements: For each file, you will provide exactly 30 single keywords. Do not serialize or number them (like 1, 2, 3). The keywords must be aligned horizontally from left to right, and each keyword must end with a comma (,). This must also be provided in a completely separate, easy-to-copy code box.
+* Example Keywords Format: 18plus, adult, warning, restriction, age, limit, prohibited, forbidden, icon, symbol, sign, caution, mature, content, only, access, control, policy, safety, regulation, website, app, media, label, badge, vector, graphic, design, alert, notice,
+6. Completion Alert: Once all the serial numbers/files from the provided metadata sheet are completed, you must proactively remind us in the chat that all files have been processed.
+7. Final Delivery: After all the images are processed, you will generate and deliver a final, ready-to-upload metadata sheet (.csv file) containing the compiled data for all specified files as a downloadable file link.
+
+Do you fully understand the entire process, examples, specific categories, and all the rules? If you are ready, let us know, and we will share the metadata sheet first.`;
+function markWorkflowDone(btn){
+  if(!btn)return;
+  if(btn._doneResetTimer)clearTimeout(btn._doneResetTimer);
+  var labels={workflowPreviewCsv:"1. Preview CSV",workflowDownloadCsv:"2. Adobe CSV Download",workflowCopyPrompt:"3. CSV create Prompt Copy",copyBatchImagesBtn:"4. 🖼️ Batch Preview PNG Copy",workflowDownloadPreview:"5. ⬇️ Batch Preview PNG Download",workflowOpenAdobe:"6. 🚀 Open Adobe Uploaded Files"};
+  var original=labels[btn.id]||btn.textContent.replace(/^✓\s*/,"");
+  btn.classList.add('done');btn.textContent='✓ '+original;
+  btn._doneResetTimer=setTimeout(function(){btn.classList.remove('done');btn.textContent=original;btn._doneResetTimer=null;},1600);
+}
+function workflowAction(btn,fn){try{fn();markWorkflowDone(btn);}catch(e){console.error(e);}}
+async function copyMasterPrompt(btn){try{await navigator.clipboard.writeText(MASTER_METADATA_PROMPT);document.getElementById('batchStatus').textContent='✅ সম্পূর্ণ Master Prompt কপি হয়েছে।';markWorkflowDone(btn);}catch(e){var a=document.createElement('textarea');a.value=MASTER_METADATA_PROMPT;document.body.appendChild(a);a.select();var ok=false;try{ok=document.execCommand('copy');}catch(x){}a.remove();document.getElementById('batchStatus').textContent=ok?'✅ সম্পূর্ণ Master Prompt কপি হয়েছে।':'⚠️ কপি করা যায়নি।';if(ok)markWorkflowDone(btn);}}
+function downloadBatchLists(){if(!filesData.length){document.getElementById("batchStatus").textContent="আগে ফাইল আপলোড করো।";return;}var size=batchSizeValue(),out=["Stock Metadata Studio — Batch Lists","Total files: "+filesData.length,"Batch size: "+size,""];for(var i=0;i<filesData.length;i+=size){out.push("BATCH "+(Math.floor(i/size)+1));filesData.slice(i,i+size).forEach(function(item,j){out.push((i+j+1)+". "+item.name);});out.push("");}var blob=new Blob([out.join("\n")],{type:"text/plain;charset=utf-8"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="Stock_Metadata_Batch_Lists.txt";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url);},1000);}
 
 /* =========================
    PROCESSING QUEUE
 ========================= */
+renderBatchPanel();
 document.getElementById("fileInput").addEventListener("change",function(e){
-  var list=Array.from(e.target.files);
+  // Snapshot the FileList immediately: some mobile file providers reuse/clear it after the picker closes.
+  var input=e.target;
+  var list=Array.from(input.files || []);
+  var added=0, failed=[];
+  if(!list.length){
+    banner("কোনো ফাইল পাওয়া যায়নি। Chrome-এ Files থেকে আবার একাধিক ফাইল সিলেক্ট করো।","warn");
+    input.value="";
+    return;
+  }
   list.forEach(function(file){
-    var ext=file.name.split(".").pop().toLowerCase();
-    var type=ext==="jpeg"?"jpg":ext;
-    var item={
-      id:nextId++,file:file,name:file.name,origName:file.name,sourceFilename:file.name,ext:ext,syncName:false,type:type,
-      title:"",keywords:[],category:8,state:"ready",stage:"",previewEl:null,previewUrl:null,canvas:null,aiUsed:false
-    };
-    if(type==="jpg"||type==="png"||type==="svg"){
-      item.previewEl="img";
-      item.previewUrl=URL.createObjectURL(file);
-    }else{
-      item.previewEl=null;
-      item.previewNote="Preview available after AI Analyze.";
+    try{
+      if(!file || !file.name) { failed.push("নামহীন ফাইল"); return; }
+      var ext=file.name.split(".").pop().toLowerCase();
+      var type=ext==="jpeg"?"jpg":ext;
+      var item={
+        id:nextId++,file:file,name:file.name,origName:file.name,sourceFilename:file.name,ext:ext,syncName:false,type:type,
+        title:"",keywords:[],category:8,state:"ready",stage:"",previewEl:null,previewUrl:null,canvas:null,aiUsed:false
+      };
+      if(type==="jpg"||type==="png"||type==="svg"){
+        item.previewEl="img";
+        item.previewUrl=URL.createObjectURL(file);
+      }else{
+        item.previewEl=null;
+        item.previewNote="Preview available after AI Analyze.";
+      }
+      filesData.push(item);
+      try { paintCard(item); }
+      catch(renderErr) {
+        // Keep processing the remaining selected files even if one card fails to render.
+        console.error("Could not render file card:", file.name, renderErr);
+        failed.push(file.name+" (card render failed)");
+      }
+      added++;
+    }catch(fileErr){
+      console.error("Could not add selected file:", file && file.name, fileErr);
+      failed.push((file && file.name ? file.name : "Unknown file")+" (upload failed)");
     }
-    filesData.push(item);
-    paintCard(item);
   });
-  e.target.value="";
-  banner(filesData.length+" file(s) ready. Paste Title and Keywords.","ok");
+  input.value="";
+  renumber();
+  renderBatchPanel();
+  scheduleWorkspaceSave();
+  runRisk(false);
+  var message=added+" of "+list.length+" selected file(s) added. Total: "+filesData.length+".";
+  if(failed.length) message+=" Failed: "+failed.join(", ");
+  banner(message,failed.length?"warn":"ok");
 });
 
 var renderChain=Promise.resolve();
