@@ -1245,6 +1245,7 @@ function setField(id,field,value){
     var c=document.getElementById("tc"+id);
     if(c) c.textContent=value.length+" / "+RULES.titleMaxLength;
   }
+  scheduleWorkspaceSave();
 }
 
 function updateKeywords(id,text){
@@ -1260,6 +1261,7 @@ function updateKeywords(id,text){
   if(chips){
     chips.innerHTML=item.keywords.map(function(k,i){return '<span class="keyword'+(i<RULES.priorityCount?" top":"")+'">'+escapeHTML(k)+"</span>";}).join("");
   }
+  scheduleWorkspaceSave();
 }
 
 function renumber(){
@@ -1316,6 +1318,7 @@ function renderBatchPanel(){
   var n=Number(sel.value)||1, start=filesData.length?(n-1)*size+1:0, batch=getCurrentBatch();
   document.getElementById("batchSummary").textContent=filesData.length?"মোট "+filesData.length+"টি ফাইল · "+count+"টি ব্যাচ · Batch "+n+"-এ "+batch.length+"টি ফাইল (ক্রম "+start+"–"+(start+batch.length-1)+")":"প্রথমে ফাইল আপলোড করো।";
   document.getElementById("batchFileList").innerHTML=batch.length?batch.map(function(item,i){return "<div>"+(start+i)+". "+escapeHTML(item.name)+"</div>";}).join(""):"এখানে ফাইলের নাম দেখাবে।";
+  if(typeof scheduleWorkspaceSave==="function") scheduleWorkspaceSave();
 }
 async function makeBatchContactSheet(batch){
   if(!batch.length) throw new Error("এই ব্যাচে কোনো ফাইল নেই।");
@@ -1791,6 +1794,8 @@ function workspaceSnapshot(){
     key:"current",
     savedAt:Date.now(),
     nextId:nextId,
+    batchSize:document.getElementById("batchSize") ? document.getElementById("batchSize").value : "10",
+    batchNumber:document.getElementById("batchNumber") ? document.getElementById("batchNumber").value : "1",
     items:filesData.map(function(item){
       return {
         id:item.id,
@@ -1841,6 +1846,8 @@ async function restoreWorkspace(){
     });
     if(!rec||!Array.isArray(rec.items)||!rec.items.length) return;
     workspaceRestoring=true;
+    var bs=document.getElementById("batchSize");
+    if(bs && rec.batchSize && Array.from(bs.options).some(function(o){return o.value===String(rec.batchSize);})) bs.value=String(rec.batchSize);
     filesData.length=0;
     var maxId=0;
     rec.items.forEach(function(r){
@@ -1863,6 +1870,10 @@ async function restoreWorkspace(){
       if(item.id>maxId) maxId=item.id;
     });
     nextId=Math.max(Number(rec.nextId)||1,maxId+1);
+    renderBatchPanel();
+    var bn=document.getElementById("batchNumber");
+    if(bn && rec.batchNumber && Array.from(bn.options).some(function(o){return o.value===String(rec.batchNumber);})) bn.value=String(rec.batchNumber);
+    renderBatchPanel();
     filesData.forEach(function(item){paintCard(item);});
     if(filesData.length){
       banner("↩️ Previous workspace restored automatically. "+filesData.length+" file(s) recovered.","ok");
